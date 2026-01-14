@@ -1,0 +1,8 @@
+{
+  "name": "M&A Intelligence Pro",
+  "description": "Premium M&A database and intelligence platform for institutional-grade deal tracking and analysis.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
