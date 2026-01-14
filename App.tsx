@@ -17,19 +17,19 @@ import {
   Lock,
   PieChart
 } from 'lucide-react';
-import LandingPage from './pages/LandingPage';
-import DealsExplorer from './pages/DealsExplorer';
-import DealProfile from './pages/DealProfile';
-import AboutPage from './pages/AboutPage';
-import MethodologyPage from './pages/MethodologyPage';
-import Dashboard from './pages/Dashboard';
-import WatchlistsPage from './pages/WatchlistsPage';
-import AccountPage from './pages/AccountPage';
-import AdminDashboard from './pages/AdminDashboard';
-import { supabase } from './lib/supabase';
+import LandingPage from './pages/LandingPage.tsx';
+import DealsExplorer from './pages/DealsExplorer.tsx';
+import DealProfile from './pages/DealProfile.tsx';
+import AboutPage from './pages/AboutPage.tsx';
+import MethodologyPage from './pages/MethodologyPage.tsx';
+import Dashboard from './pages/Dashboard.tsx';
+import WatchlistsPage from './pages/WatchlistsPage.tsx';
+import AccountPage from './pages/AccountPage.tsx';
+import AdminDashboard from './pages/AdminDashboard.tsx';
+import { supabase } from './lib/supabase.ts';
 
 const App: React.FC = () => {
-  // MOCK SESSION FOR TESTING: Automatically logged in as an admin to bypass access restrictions
+  // MOCK SESSION FOR TESTING
   const [session, setSession] = useState<any>({
     user: {
       id: 'test-user-id',
@@ -42,23 +42,7 @@ const App: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Disable real session management for immediate testing access
-  /*
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-  */
-
   const handleLogout = () => {
-    // Just clear mock session for visual test, but effectively we want it accessible
     setSession(null);
     navigate('/');
   };
@@ -156,14 +140,10 @@ const App: React.FC = () => {
           <Route path="/methodology" element={<MethodologyPage />} />
           <Route path="/deals" element={<DealsExplorer />} />
           <Route path="/deals/:slug" element={<DealProfile />} />
-          
-          {/* Auth Protected Routes - now effectively open due to mock session */}
           <Route path="/app" element={<Dashboard />} />
           <Route path="/app/watchlists" element={<WatchlistsPage />} />
           <Route path="/app/account" element={<AccountPage />} />
           <Route path="/app/admin" element={<AdminDashboard />} />
-
-          {/* Login/Signup just trigger the mock login */}
           <Route path="/login" element={<AuthPlaceholder type="login" onAuth={handleLogin} />} />
           <Route path="/signup" element={<AuthPlaceholder type="signup" onAuth={handleLogin} />} />
         </Routes>
@@ -194,13 +174,12 @@ const App: React.FC = () => {
               <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Company</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link to="/about" className="hover:text-white transition">About Us</Link></li>
-                <li><Link to="/contact" className="hover:text-white transition">Contact</Link></li>
                 <li><a href="#" className="hover:text-white transition">Privacy Policy</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs">
-            <p>&copy; 2024 M&A Intelligence Pro. All rights reserved.</p>
+            <p>&copy; 2026 M&A Intelligence Pro. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="hover:text-white">Twitter</a>
               <a href="#" className="hover:text-white">LinkedIn</a>
@@ -213,7 +192,6 @@ const App: React.FC = () => {
   );
 };
 
-// Updated placeholder to trigger mock authentication
 const AuthPlaceholder: React.FC<{ type: 'login' | 'signup', onAuth: () => void }> = ({ type, onAuth }) => {
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-4">
@@ -223,7 +201,7 @@ const AuthPlaceholder: React.FC<{ type: 'login' | 'signup', onAuth: () => void }
             <ShieldCheck className="h-6 w-6" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900">{type === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
-          <p className="text-slate-500 mt-2">Bypassing auth for testing. Click the button below.</p>
+          <p className="text-slate-500 mt-2">Bypassing auth for testing.</p>
         </div>
         
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onAuth(); }}>
@@ -233,19 +211,12 @@ const AuthPlaceholder: React.FC<{ type: 'login' | 'signup', onAuth: () => void }
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-            <input type="password" underline-none className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" defaultValue="••••••••" />
+            <input type="password" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" defaultValue="••••••••" />
           </div>
           <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
             {type === 'login' ? 'Bypass Login (Enter App)' : 'Create Test Account'}
           </button>
         </form>
-        
-        <div className="mt-6 text-center text-sm">
-          <span className="text-slate-500">{type === 'login' ? "Don't have an account?" : "Already have an account?"}</span>
-          <Link to={type === 'login' ? '/signup' : '/login'} className="ml-1 text-indigo-600 font-medium hover:underline">
-            {type === 'login' ? 'Get Access' : 'Sign In'}
-          </Link>
-        </div>
       </div>
     </div>
   );

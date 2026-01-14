@@ -5,14 +5,12 @@ import {
   TrendingUp, 
   ShieldCheck, 
   Zap, 
-  ChevronRight, 
   Globe, 
   Database,
-  ArrowRight,
   PieChart,
   BarChart3
 } from 'lucide-react';
-import { SEED_DEALS } from '../constants';
+import { SEED_DEALS } from '../constants.tsx';
 
 const LandingPage: React.FC = () => {
   return (
@@ -51,7 +49,6 @@ const LandingPage: React.FC = () => {
             </div>
             
             <div className="mt-12 lg:mt-0 lg:col-span-6 relative">
-              {/* Perfectly Straight, Non-Crooked Dashboard Mockup */}
               <div className="bg-slate-900 rounded-3xl p-4 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border border-slate-800 transform transition-all duration-500 ease-out hover:translate-y-[-8px]">
                 <div className="bg-slate-800 rounded-2xl p-6 overflow-hidden">
                   <div className="flex items-center justify-between mb-8 border-b border-slate-700 pb-4">
@@ -136,31 +133,6 @@ const LandingPage: React.FC = () => {
                 <p className="text-slate-600 text-sm leading-relaxed">{feature.desc}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-24 overflow-hidden relative">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-indigo-600 rounded-3xl px-8 py-16 sm:p-20 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-64 w-64 rounded-full bg-indigo-700/30 blur-3xl"></div>
-            
-            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-white mb-6 relative z-10">
-              Ready to refine your <br /> M&A strategy?
-            </h2>
-            <p className="text-indigo-100 text-lg mb-10 max-w-xl mx-auto relative z-10">
-              Join thousands of analysts, advisors, and corporate development professionals who rely on M&A Intelligence for their daily workflows.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
-              <Link to="/signup" className="bg-white text-indigo-600 px-8 py-4 rounded-xl font-bold hover:bg-slate-50 transition shadow-lg">
-                Create Free Account
-              </Link>
-              <Link to="/deals" className="bg-indigo-500 text-white px-8 py-4 rounded-xl font-bold hover:bg-indigo-400 transition border border-indigo-400/30">
-                View Public Database
-              </Link>
-            </div>
           </div>
         </div>
       </section>

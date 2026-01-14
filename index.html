@@ -17,22 +17,39 @@
       h1, h2, h3, .font-serif {
         font-family: 'Playfair Display', serif;
       }
+      /* Custom scrollbar for terminal logs */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 10px;
+      }
     </style>
-  <script type="importmap">
+    <!-- Shim for older browsers that don't support import maps natively -->
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
 {
   "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3",
+    "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
     "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.90.1",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@^5.90.16"
+    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@^5.90.16",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
-</head>
+  </head>
   <body>
     <div id="root"></div>
+    <!-- Explicitly load the entry point -->
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>

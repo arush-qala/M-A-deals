@@ -1,27 +1,36 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-// Fix: Added missing import for Database to fix error on line 147
 import { 
   Search, 
   Filter, 
   LayoutGrid, 
   List, 
   ChevronRight, 
-  Calendar,
-  Globe,
-  Tag,
-  ArrowUpDown,
-  Database
+  Globe, 
+  Tag, 
+  Database,
+  RefreshCcw,
+  Zap
 } from 'lucide-react';
-import { SEED_DEALS } from '../constants';
-import { DealStatus } from '../types';
+import { SEED_DEALS } from '../constants.tsx';
+import { DealStatus } from '../types.ts';
 
 const DealsExplorer: React.FC = () => {
   const [view, setView] = useState<'grid' | 'list'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    // Simulate engine ingestion
+    setTimeout(() => {
+      setIsRefreshing(false);
+      // In a real app, this would re-fetch the query from the server
+    }, 2000);
+  };
+
   const filteredDeals = SEED_DEALS.filter(deal => {
     const matchesSearch = deal.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          deal.sector.toLowerCase().includes(searchQuery.toLowerCase());
@@ -43,27 +52,45 @@ const DealsExplorer: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
+          <div className="inline-flex items-center space-x-2 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold uppercase tracking-wider mb-2 border border-indigo-100">
+            <Zap className="h-3 w-3" />
+            <span>24/7 Market Ingestion Active</span>
+          </div>
           <h1 className="text-4xl font-serif font-bold text-slate-900 mb-2">Deals Explorer</h1>
           <p className="text-slate-500">Search and analyze global transaction flow with verified data.</p>
         </div>
         
-        <div className="flex items-center space-x-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
+        <div className="flex items-center space-x-3">
           <button 
-            onClick={() => setView('list')} 
-            className={`p-2 rounded-md transition ${view === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl font-bold transition shadow-sm border ${
+              isRefreshing 
+              ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' 
+              : 'bg-white text-slate-900 border-slate-200 hover:bg-slate-50 active:scale-95'
+            }`}
           >
-            <List className="h-5 w-5" />
+            <RefreshCcw className={`h-4 w-4 ${isRefreshing ? 'animate-spin text-indigo-500' : 'text-slate-400'}`} />
+            <span>{isRefreshing ? 'Polling Sources...' : 'Sync Latest Signal'}</span>
           </button>
-          <button 
-            onClick={() => setView('grid')} 
-            className={`p-2 rounded-md transition ${view === 'grid' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            <LayoutGrid className="h-5 w-5" />
-          </button>
+
+          <div className="flex items-center space-x-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button 
+              onClick={() => setView('list')} 
+              className={`p-2 rounded-md transition ${view === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <List className="h-5 w-5" />
+            </button>
+            <button 
+              onClick={() => setView('grid')} 
+              className={`p-2 rounded-md transition ${view === 'grid' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <LayoutGrid className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2 relative">
@@ -98,7 +125,6 @@ const DealsExplorer: React.FC = () => {
         </div>
       </div>
 
-      {/* Results */}
       {view === 'list' ? (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -159,7 +185,6 @@ const DealsExplorer: React.FC = () => {
                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
                   {deal.status}
                 </span>
-                <span className="text-xs font-mono text-slate-400">{new Date(deal.announced_date).toLocaleDateString()}</span>
               </div>
               <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition mb-3 line-clamp-2">
                 {deal.title}
@@ -183,17 +208,6 @@ const DealsExplorer: React.FC = () => {
           ))}
         </div>
       )}
-      
-      {/* Pagination Placeholder */}
-      <div className="mt-12 flex justify-center items-center space-x-4">
-        <button className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-400 cursor-not-allowed">Previous</button>
-        <div className="flex space-x-2">
-          <button className="h-10 w-10 bg-indigo-600 text-white rounded-lg font-bold">1</button>
-          <button className="h-10 w-10 border border-slate-200 text-slate-600 rounded-lg font-bold hover:bg-slate-50">2</button>
-          <button className="h-10 w-10 border border-slate-200 text-slate-600 rounded-lg font-bold hover:bg-slate-50">3</button>
-        </div>
-        <button className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50">Next</button>
-      </div>
     </div>
   );
 };

@@ -1,13 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Database, 
   Settings, 
   RefreshCcw, 
-  CheckCircle2, 
   AlertCircle, 
   Plus, 
-  Search,
   Trash2,
   Edit3,
   Clock,
@@ -17,32 +15,12 @@ import {
   Key,
   Network
 } from 'lucide-react';
-import { SEED_DEALS } from '../constants';
+import { SEED_DEALS } from '../constants.tsx';
 
 const AdminDashboard: React.FC = () => {
-  const [isIngesting, setIsIngesting] = useState(false);
   const [githubStatus, setGithubStatus] = useState<'connected' | 'error' | 'syncing'>('error');
   const [logs, setLogs] = useState<string[]>([]);
-  const [lastUpdate, setLastUpdate] = useState(new Date().toLocaleTimeString());
-
-  const triggerIngestion = () => {
-    setIsIngesting(true);
-    setLogs(prev => ["Initializing scrapers...", ...prev]);
-    
-    setTimeout(() => {
-      setLogs(prev => ["Connecting to SEC EDGAR API...", ...prev]);
-    }, 800);
-
-    setTimeout(() => {
-      setLogs(prev => ["Analyzing 14 new filings for Jan 2026...", ...prev]);
-    }, 1600);
-
-    setTimeout(() => {
-      setIsIngesting(false);
-      setLastUpdate(new Date().toLocaleTimeString());
-      setLogs(prev => ["SUCCESS: 2 deals updated, 1 new rumored deal logged.", ...prev]);
-    }, 3000);
-  };
+  const lastUpdate = new Date().toLocaleTimeString();
 
   const handleReconnectGithub = () => {
     setGithubStatus('syncing');
@@ -69,14 +47,10 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="mt-4 md:mt-0 flex items-center space-x-3">
-          <button 
-            onClick={triggerIngestion}
-            disabled={isIngesting}
-            className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-bold transition shadow-lg ${isIngesting ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
-          >
-            <RefreshCcw className={`h-4 w-4 ${isIngesting ? 'animate-spin' : ''}`} />
-            <span>{isIngesting ? 'Syncing Database...' : 'Trigger Global Sync'}</span>
+        <div className="mt-4 md:mt-0">
+          <button className="flex items-center space-x-2 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-50 transition">
+            <Settings className="h-4 w-4" />
+            <span>Console Settings</span>
           </button>
         </div>
       </div>
@@ -139,12 +113,12 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Live Ingestion Log */}
+          {/* System Ingestion Log View */}
           <div className="bg-slate-900 rounded-3xl p-6 shadow-xl border border-slate-800 font-mono">
             <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
               <h3 className="text-indigo-400 text-xs font-bold uppercase tracking-widest flex items-center">
                 <Zap className="h-3 w-3 mr-2" />
-                Live Ingestion Log
+                System Activity Log
               </h3>
               <div className="flex space-x-1">
                 <div className="h-2 w-2 rounded-full bg-slate-700"></div>
@@ -152,11 +126,12 @@ const AdminDashboard: React.FC = () => {
                 <div className="h-2 w-2 rounded-full bg-slate-700"></div>
               </div>
             </div>
-            <div className="space-y-2 h-40 overflow-y-auto custom-scrollbar">
-              {logs.length === 0 && <div className="text-slate-600 text-sm italic">Waiting for process trigger...</div>}
+            <div className="space-y-2 h-40 overflow-y-auto custom-scrollbar text-xs">
+              {logs.length === 0 && <div className="text-slate-600 italic">No recent system events logged. Listening for engine signals...</div>}
               {logs.map((log, i) => (
-                <div key={i} className={`text-sm ${i === 0 ? 'text-white' : 'text-slate-500'}`}>
-                  <span className="text-indigo-500">[{new Date().toLocaleTimeString()}]</span> {log}
+                <div key={i} className={`flex space-x-3 ${i === 0 ? 'text-white' : 'text-slate-500'}`}>
+                  <span className="text-indigo-500 shrink-0">[{new Date().toLocaleTimeString()}]</span> 
+                  <span>{log}</span>
                 </div>
               ))}
             </div>
@@ -165,9 +140,9 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center space-x-4">
-                <h2 className="font-bold text-slate-900">Current Database (Nov 2025 - Jan 2026)</h2>
+                <h2 className="font-bold text-slate-900">Verified Deal Database</h2>
                 <span className="bg-indigo-100 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                  {SEED_DEALS.length} Active Records
+                  {SEED_DEALS.length} Records
                 </span>
               </div>
               <button className="bg-white text-slate-900 border border-slate-200 px-4 py-2 rounded-lg text-sm font-bold flex items-center space-x-2 hover:bg-slate-50 transition">
@@ -180,9 +155,9 @@ const AdminDashboard: React.FC = () => {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-200">
-                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Entry Date</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Deal Title</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Transaction</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Edit</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
