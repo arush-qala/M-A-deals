@@ -3,10 +3,11 @@ import React from 'react';
 import { Bookmark, LayoutGrid, Plus, ChevronRight } from 'lucide-react';
 import { SEED_DEALS, SEED_COMPANIES } from '../constants.tsx';
 import { Link } from 'react-router-dom';
+import CompanyLogo from '../components/CompanyLogo.tsx';
 
 const WatchlistsPage: React.FC = () => {
-  const getTargetLogo = (targetId: string) => {
-    return SEED_COMPANIES.find(c => c.id === targetId)?.logo_url;
+  const getTargetCompany = (targetId: string) => {
+    return SEED_COMPANIES.find(c => c.id === targetId);
   };
 
   return (
@@ -49,34 +50,41 @@ const WatchlistsPage: React.FC = () => {
               </div>
             </div>
             <div className="divide-y divide-slate-100">
-              {SEED_DEALS.slice(0, 4).map((deal, i) => (
-                <div key={i} className="p-6 flex items-center justify-between hover:bg-slate-50 transition group">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-14 w-14 bg-white border border-slate-200 rounded-xl flex items-center justify-center p-2 shadow-sm">
-                      <img src={getTargetLogo(deal.target_id)} alt="Logo" className="h-full w-full object-contain" />
-                    </div>
-                    <div>
-                      <Link to={`/deals/${deal.slug}`} className="text-lg font-bold text-slate-900 hover:text-indigo-600 transition block leading-snug">
-                        {deal.title.split(' for ')[0]}
-                      </Link>
-                      <div className="flex items-center space-x-4 text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-wider">
-                        <span className="text-indigo-600">{deal.status}</span>
-                        <span>{deal.sector.split(' / ')[0]}</span>
-                        <span className="text-slate-400">Added Oct 12</span>
+              {SEED_DEALS.slice(0, 4).map((deal, i) => {
+                const target = getTargetCompany(deal.target_id);
+                return (
+                  <div key={i} className="p-6 flex items-center justify-between hover:bg-slate-50 transition group">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-14 w-14 bg-white border border-slate-200 rounded-xl flex items-center justify-center p-2 shadow-sm">
+                        <CompanyLogo 
+                          logoUrl={target?.logo_url} 
+                          name={target?.name || 'Target'} 
+                          className="h-full w-full" 
+                        />
+                      </div>
+                      <div>
+                        <Link to={`/deals/${deal.slug}`} className="text-lg font-bold text-slate-900 hover:text-indigo-600 transition block leading-snug">
+                          {deal.title.split(' for ')[0]}
+                        </Link>
+                        <div className="flex items-center space-x-4 text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-wider">
+                          <span className="text-indigo-600">{deal.status}</span>
+                          <span>{deal.sector.split(' / ')[0]}</span>
+                          <span className="text-slate-400">Added Oct 12</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-6">
-                    <div className="text-right">
-                      <div className="text-lg font-serif font-bold text-slate-900">
-                        {deal.value_usd ? `$${(deal.value_usd / 1000000000).toFixed(1)}B` : 'Undisclosed'}
+                    <div className="flex items-center space-x-6">
+                      <div className="text-right">
+                        <div className="text-lg font-serif font-bold text-slate-900">
+                          {deal.value_usd ? `$${(deal.value_usd / 1000000000).toFixed(1)}B` : 'Undisclosed'}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono">EV at Entry</div>
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono">EV at Entry</div>
+                      <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-indigo-400" />
                     </div>
-                    <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-indigo-400" />
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

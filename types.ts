@@ -12,6 +12,12 @@ export interface Company {
   description?: string;
 }
 
+export interface MarketResponse {
+  acquirer_ticker: string;
+  change_percent: number; // e.g. 5.2 for +5.2%, -2.1 for -2.1%
+  sentiment_summary: string;
+}
+
 export interface Deal {
   id: string;
   slug: string;
@@ -28,6 +34,7 @@ export interface Deal {
   geography: string;
   acquirer_id: string; // ID of the acquiring company
   target_id: string;   // ID of the target company
+  market_response?: MarketResponse; // Optional, only for public companies with verified data
   created_at: string;
   updated_at: string;
 }

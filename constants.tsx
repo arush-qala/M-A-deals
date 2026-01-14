@@ -2,26 +2,26 @@
 import { Deal, Company } from './types.ts';
 
 export const SEED_COMPANIES: Company[] = [
-  { id: 'c1', name: 'Apple Inc.', sector: 'Technology', headquarters: 'Cupertino, USA', logo_url: 'https://logo.clearbit.com/apple.com' },
-  { id: 'c2', name: 'Luminar Technologies', sector: 'Autonomous Systems', headquarters: 'Orlando, USA', logo_url: 'https://logo.clearbit.com/luminartech.com' },
-  { id: 'c3', name: 'The Walt Disney Company', sector: 'Media & Entertainment', headquarters: 'Burbank, USA', logo_url: 'https://logo.clearbit.com/disney.com' },
-  { id: 'c4', name: 'Epic Games', sector: 'Gaming & Software', headquarters: 'Cary, USA', logo_url: 'https://logo.clearbit.com/epicgames.com' },
-  { id: 'c5', name: 'Chevron Corporation', sector: 'Energy', headquarters: 'San Ramon, USA', logo_url: 'https://logo.clearbit.com/chevron.com' },
-  { id: 'c6', name: 'Ørsted A/S', sector: 'Renewables', headquarters: 'Fredericia, Denmark', logo_url: 'https://logo.clearbit.com/orsted.com' },
-  { id: 'c7', name: 'Google (Alphabet Inc.)', sector: 'Technology', headquarters: 'Mountain View, USA', logo_url: 'https://logo.clearbit.com/google.com' },
-  { id: 'c8', name: 'CrowdStrike Holdings', sector: 'Cybersecurity', headquarters: 'Austin, USA', logo_url: 'https://logo.clearbit.com/crowdstrike.com' },
-  { id: 'c9', name: 'Eli Lilly and Company', sector: 'Pharmaceuticals', headquarters: 'Indianapolis, USA', logo_url: 'https://logo.clearbit.com/lilly.com' },
-  { id: 'c10', name: 'Viking Therapeutics', sector: 'Biotech', headquarters: 'San Diego, USA', logo_url: 'https://logo.clearbit.com/vikingtherapeutics.com' },
-  { id: 'c11', name: 'Stripe, Inc.', sector: 'Fintech', headquarters: 'San Francisco, USA', logo_url: 'https://logo.clearbit.com/stripe.com' },
-  { id: 'c12', name: 'Airwallex', sector: 'Fintech', headquarters: 'Hong Kong', logo_url: 'https://logo.clearbit.com/airwallex.com' },
-  { id: 'c13', name: 'Tesla, Inc.', sector: 'Automotive/Energy', headquarters: 'Austin, USA', logo_url: 'https://logo.clearbit.com/tesla.com' },
-  { id: 'c14', name: 'Sigma Lithium', sector: 'Mining & Materials', headquarters: 'Vancouver, Canada', logo_url: 'https://logo.clearbit.com/sigmalithiumresources.com' },
-  { id: 'c15', name: 'Adobe Inc.', sector: 'Software', headquarters: 'San Jose, USA', logo_url: 'https://logo.clearbit.com/adobe.com' },
-  { id: 'c16', name: 'Runway AI', sector: 'Artificial Intelligence', headquarters: 'New York, USA', logo_url: 'https://logo.clearbit.com/runwayml.com' },
-  { id: 'c17', name: 'JPMorgan Chase & Co.', sector: 'Financial Services', headquarters: 'New York, USA', logo_url: 'https://logo.clearbit.com/jpmorganchase.com' },
-  { id: 'c18', name: 'Nubank', sector: 'Digital Banking', headquarters: 'São Paulo, Brazil', logo_url: 'https://logo.clearbit.com/nubank.com.br' },
-  { id: 'c19', name: 'Amazon.com, Inc.', sector: 'Retail & Tech', headquarters: 'Seattle, USA', logo_url: 'https://logo.clearbit.com/amazon.com' },
-  { id: 'c20', name: 'Exotec', sector: 'Robotics', headquarters: 'Croix, France', logo_url: 'https://logo.clearbit.com/exotec.com' },
+  { id: 'c1', name: 'Apple Inc.', sector: 'Technology', headquarters: 'Cupertino, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg' },
+  { id: 'c2', name: 'Luminar Technologies', sector: 'Autonomous Systems', headquarters: 'Orlando, USA', logo_url: 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://luminartech.com&size=128' },
+  { id: 'c3', name: 'The Walt Disney Company', sector: 'Media & Entertainment', headquarters: 'Burbank, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Disney_wordmark.svg' },
+  { id: 'c4', name: 'Epic Games', sector: 'Gaming & Software', headquarters: 'Cary, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/3/31/Epic_Games_logo.svg' },
+  { id: 'c5', name: 'Chevron Corporation', sector: 'Energy', headquarters: 'San Ramon, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/6/6f/Chevron_Logo.svg' },
+  { id: 'c6', name: 'Ørsted A/S', sector: 'Renewables', headquarters: 'Fredericia, Denmark', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/%C3%98rsted_logo.svg' },
+  { id: 'c7', name: 'Google (Alphabet Inc.)', sector: 'Technology', headquarters: 'Mountain View, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg' },
+  { id: 'c8', name: 'CrowdStrike Holdings', sector: 'Cybersecurity', headquarters: 'Austin, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/d/d6/CrowdStrike_logo.svg' },
+  { id: 'c9', name: 'Eli Lilly and Company', sector: 'Pharmaceuticals', headquarters: 'Indianapolis, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/2/27/Eli_Lilly_and_Company_logo.svg' },
+  { id: 'c10', name: 'Viking Therapeutics', sector: 'Biotech', headquarters: 'San Diego, USA', logo_url: 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://vikingtherapeutics.com&size=128' },
+  { id: 'c11', name: 'Stripe, Inc.', sector: 'Fintech', headquarters: 'San Francisco, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg' },
+  { id: 'c12', name: 'Airwallex', sector: 'Fintech', headquarters: 'Hong Kong', logo_url: 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://airwallex.com&size=128' },
+  { id: 'c13', name: 'Tesla, Inc.', sector: 'Automotive/Energy', headquarters: 'Austin, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png' },
+  { id: 'c14', name: 'Sigma Lithium', sector: 'Mining & Materials', headquarters: 'Vancouver, Canada', logo_url: 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://sigmalithium.com&size=128' },
+  { id: 'c15', name: 'Adobe Inc.', sector: 'Software', headquarters: 'San Jose, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/Adobe_Corporate_Logo.png' },
+  { id: 'c16', name: 'Runway AI', sector: 'Artificial Intelligence', headquarters: 'New York, USA', logo_url: 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://runwayml.com&size=128' },
+  { id: 'c17', name: 'JPMorgan Chase & Co.', sector: 'Financial Services', headquarters: 'New York, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/d/d4/JPMorgan_Chase_logo_2008.svg' },
+  { id: 'c18', name: 'Nubank', sector: 'Digital Banking', headquarters: 'São Paulo, Brazil', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/f/f7/Nubank_logo_2021.svg' },
+  { id: 'c19', name: 'Amazon.com, Inc.', sector: 'Retail & Tech', headquarters: 'Seattle, USA', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg' },
+  { id: 'c20', name: 'Exotec', sector: 'Robotics', headquarters: 'Croix, France', logo_url: 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://exotec.com&size=128' },
 ];
 
 export const SEED_DEALS: Deal[] = [
@@ -41,6 +41,11 @@ export const SEED_DEALS: Deal[] = [
     geography: 'North America',
     acquirer_id: 'c1',
     target_id: 'c2',
+    market_response: {
+      acquirer_ticker: 'AAPL',
+      change_percent: 1.24,
+      sentiment_summary: 'Markets reacted modestly positive, viewing the deal as a necessary vertical integration step.'
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -60,6 +65,11 @@ export const SEED_DEALS: Deal[] = [
     geography: 'Global',
     acquirer_id: 'c3',
     target_id: 'c4',
+    market_response: {
+      acquirer_ticker: 'DIS',
+      change_percent: 4.85,
+      sentiment_summary: 'Shareholders rallied on the news, signaling strong approval of the metaverse strategy.'
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -79,6 +89,11 @@ export const SEED_DEALS: Deal[] = [
     geography: 'Europe / USA',
     acquirer_id: 'c5',
     target_id: 'c6',
+    market_response: {
+      acquirer_ticker: 'CVX',
+      change_percent: -1.85,
+      sentiment_summary: 'Stock dipped on concerns over integration costs and lower immediate margins from wind assets.'
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -98,6 +113,11 @@ export const SEED_DEALS: Deal[] = [
     geography: 'North America',
     acquirer_id: 'c15',
     target_id: 'c16',
+    market_response: {
+      acquirer_ticker: 'ADBE',
+      change_percent: 3.10,
+      sentiment_summary: 'Strong buy volume reflects confidence in Adobe cementing its creative dominance.'
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -117,6 +137,11 @@ export const SEED_DEALS: Deal[] = [
     geography: 'Latin America',
     acquirer_id: 'c17',
     target_id: 'c18',
+    market_response: {
+      acquirer_ticker: 'JPM',
+      change_percent: -0.95,
+      sentiment_summary: 'Investors showed caution regarding the high premium and potential regulatory hurdles in Brazil.'
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -136,6 +161,11 @@ export const SEED_DEALS: Deal[] = [
     geography: 'South America',
     acquirer_id: 'c13',
     target_id: 'c14',
+    market_response: {
+      acquirer_ticker: 'TSLA',
+      change_percent: 5.12,
+      sentiment_summary: 'Shares surged as analysts upgraded forecasts based on improved margin security.'
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -155,6 +185,11 @@ export const SEED_DEALS: Deal[] = [
     geography: 'North America',
     acquirer_id: 'c7',
     target_id: 'c8',
+    market_response: {
+      acquirer_ticker: 'GOOGL',
+      change_percent: 2.25,
+      sentiment_summary: 'Positive reception to the aggressive move in the cloud security war.'
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -174,6 +209,11 @@ export const SEED_DEALS: Deal[] = [
     geography: 'North America',
     acquirer_id: 'c9',
     target_id: 'c10',
+    market_response: {
+      acquirer_ticker: 'LLY',
+      change_percent: 6.80,
+      sentiment_summary: 'Market reacted enthusiastically to the consolidation of a key competitor.'
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -193,6 +233,11 @@ export const SEED_DEALS: Deal[] = [
     geography: 'Europe',
     acquirer_id: 'c19',
     target_id: 'c20',
+    market_response: {
+      acquirer_ticker: 'AMZN',
+      change_percent: 0.75,
+      sentiment_summary: 'Neutral to slightly positive; viewed as a smart bolt-on operational efficiency play.'
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -212,6 +257,7 @@ export const SEED_DEALS: Deal[] = [
     geography: 'Global',
     acquirer_id: 'c11',
     target_id: 'c12',
+    // No market response because Stripe is private
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   }

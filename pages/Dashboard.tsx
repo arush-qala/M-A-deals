@@ -12,10 +12,11 @@ import {
   PieChart
 } from 'lucide-react';
 import { SEED_DEALS, SEED_COMPANIES } from '../constants.tsx';
+import CompanyLogo from '../components/CompanyLogo.tsx';
 
 const Dashboard: React.FC = () => {
-  const getTargetLogo = (targetId: string) => {
-    return SEED_COMPANIES.find(c => c.id === targetId)?.logo_url;
+  const getTargetCompany = (targetId: string) => {
+    return SEED_COMPANIES.find(c => c.id === targetId);
   };
 
   return (
@@ -61,22 +62,29 @@ const Dashboard: React.FC = () => {
               <Link to="/app/watchlists" className="text-xs font-bold text-indigo-600 hover:underline">View All</Link>
             </div>
             <div className="divide-y divide-slate-50">
-              {SEED_DEALS.slice(0, 5).map((deal, i) => (
-                <Link key={i} to={`/deals/${deal.slug}`} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition group">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-10 w-10 bg-white border border-slate-100 rounded flex items-center justify-center p-1.5 shadow-xs">
-                      <img src={getTargetLogo(deal.target_id)} alt="Logo" className="h-full w-full object-contain" />
+              {SEED_DEALS.slice(0, 5).map((deal, i) => {
+                const target = getTargetCompany(deal.target_id);
+                return (
+                  <Link key={i} to={`/deals/${deal.slug}`} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition group">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-10 w-10 bg-white border border-slate-100 rounded flex items-center justify-center p-1.5 shadow-xs">
+                        <CompanyLogo 
+                          logoUrl={target?.logo_url} 
+                          name={target?.name || 'Target'} 
+                          className="h-full w-full" 
+                        />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition">{deal.title.split(' to ')[0]}</div>
+                        <div className="text-xs text-slate-500">Updated status to <span className="text-indigo-600 font-medium">{deal.status}</span></div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition">{deal.title.split(' to ')[0]}</div>
-                      <div className="text-xs text-slate-500">Updated status to <span className="text-indigo-600 font-medium">{deal.status}</span></div>
+                    <div className="text-right">
+                      <div className="text-xs font-mono text-slate-400">2h ago</div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs font-mono text-slate-400">2h ago</div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -14,10 +14,12 @@ import {
   ChevronRight,
   ShieldCheck,
   AlertCircle,
-  Sparkles
+  Sparkles,
+  TrendingDown
 } from 'lucide-react';
 import { SEED_DEALS, SEED_COMPANIES } from '../constants.tsx';
 import { Deal, Company, DealStatus } from '../types.ts';
+import CompanyLogo from '../components/CompanyLogo.tsx';
 
 const DealProfile: React.FC = () => {
   const { slug } = useParams();
@@ -160,7 +162,11 @@ const DealProfile: React.FC = () => {
                   <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-4">Lead Acquirer</div>
                   <div className="flex items-center space-x-4">
                     <div className="h-16 w-16 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center overflow-hidden p-2">
-                      <img src={acquirer.logo_url} alt={acquirer.name} className="h-full w-full object-contain" />
+                      <CompanyLogo 
+                        logoUrl={acquirer.logo_url} 
+                        name={acquirer.name} 
+                        className="h-full w-full" 
+                      />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-slate-900">{acquirer.name}</h3>
@@ -174,7 +180,11 @@ const DealProfile: React.FC = () => {
                   <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-4">Target Entity</div>
                   <div className="flex items-center space-x-4">
                     <div className="h-16 w-16 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center overflow-hidden p-2">
-                      <img src={target.logo_url} alt={target.name} className="h-full w-full object-contain" />
+                      <CompanyLogo 
+                        logoUrl={target.logo_url} 
+                        name={target.name} 
+                        className="h-full w-full" 
+                      />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-slate-900">{target.name}</h3>
@@ -237,14 +247,24 @@ const DealProfile: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
-                <h3 className="text-lg font-bold text-slate-900 mb-6">Market Response</h3>
-                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-                  <div className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1">Stock Performance ({acquirer?.name.split(' ')[0]})</div>
-                  <div className="text-2xl font-bold text-emerald-700">+2.45%</div>
-                  <p className="text-[10px] text-emerald-600 mt-1">Institutional sentiment remains bullish on synergy projections.</p>
+              {/* Verified Market Response (Dynamic) */}
+              {deal.market_response && (
+                <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                  <h3 className="text-lg font-bold text-slate-900 mb-6">Market Response</h3>
+                  <div className={`p-4 rounded-2xl border ${deal.market_response.change_percent >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+                    <div className={`text-xs font-bold uppercase tracking-widest mb-1 ${deal.market_response.change_percent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      Stock Performance ({deal.market_response.acquirer_ticker})
+                    </div>
+                    <div className={`text-2xl font-bold flex items-center ${deal.market_response.change_percent >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                      {deal.market_response.change_percent >= 0 ? <TrendingUp className="h-5 w-5 mr-2" /> : <TrendingDown className="h-5 w-5 mr-2" />}
+                      {deal.market_response.change_percent > 0 ? '+' : ''}{deal.market_response.change_percent}%
+                    </div>
+                    <p className={`text-[10px] mt-2 font-medium ${deal.market_response.change_percent >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      "{deal.market_response.sentiment_summary}"
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>

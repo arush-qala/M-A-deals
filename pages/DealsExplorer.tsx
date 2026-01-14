@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { SEED_DEALS, SEED_COMPANIES } from '../constants.tsx';
 import { DealStatus } from '../types.ts';
+import CompanyLogo from '../components/CompanyLogo.tsx';
 
 const DealsExplorer: React.FC = () => {
   const [view, setView] = useState<'grid' | 'list'>('list');
@@ -79,8 +80,8 @@ const DealsExplorer: React.FC = () => {
 
   const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'All' || sectorFilter !== 'All' || geoFilter !== 'All' || valueTier !== 'All';
 
-  const getTargetLogo = (targetId: string) => {
-    return SEED_COMPANIES.find(c => c.id === targetId)?.logo_url;
+  const getTargetCompany = (targetId: string) => {
+    return SEED_COMPANIES.find(c => c.id === targetId);
   };
 
   return (
@@ -259,40 +260,47 @@ const DealsExplorer: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredDeals.map((deal) => (
-                  <tr key={deal.id} className="hover:bg-slate-50/50 transition cursor-pointer group" onClick={() => window.location.hash = `#/deals/${deal.slug}`}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
-                      {new Date(deal.announced_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-8 w-8 bg-slate-50 border border-slate-200 rounded p-1 flex-shrink-0">
-                          <img src={getTargetLogo(deal.target_id)} alt="Logo" className="h-full w-full object-contain" />
+                {filteredDeals.map((deal) => {
+                  const target = getTargetCompany(deal.target_id);
+                  return (
+                    <tr key={deal.id} className="hover:bg-slate-50/50 transition cursor-pointer group" onClick={() => window.location.hash = `#/deals/${deal.slug}`}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
+                        {new Date(deal.announced_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="h-8 w-8 bg-slate-50 border border-slate-200 rounded p-1 flex-shrink-0">
+                            <CompanyLogo 
+                              logoUrl={target?.logo_url} 
+                              name={target?.name || 'Target'} 
+                              className="h-full w-full" 
+                            />
+                          </div>
+                          <div className="truncate max-w-xs">
+                            <div className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition">{deal.title}</div>
+                            <div className="text-[10px] text-slate-400">{deal.geography}</div>
+                          </div>
                         </div>
-                        <div className="truncate max-w-xs">
-                          <div className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition">{deal.title}</div>
-                          <div className="text-[10px] text-slate-400">{deal.geography}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="inline-flex items-center text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+                          {deal.sector.split(' / ')[0]}
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="inline-flex items-center text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
-                        {deal.sector.split(' / ')[0]}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">
-                      {deal.value_usd ? `$${(deal.value_usd / 1000000).toLocaleString()}M` : 'Undisclosed'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
-                        {deal.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-indigo-400 inline-block" />
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">
+                        {deal.value_usd ? `$${(deal.value_usd / 1000000).toLocaleString()}M` : 'Undisclosed'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
+                          {deal.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-indigo-400 inline-block" />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -306,39 +314,46 @@ const DealsExplorer: React.FC = () => {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDeals.map((deal) => (
-            <Link key={deal.id} to={`/deals/${deal.slug}`} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md hover:border-indigo-200 transition group flex flex-col h-full">
-              <div className="flex justify-between items-start mb-4">
-                <div className="h-10 w-10 bg-white border border-slate-100 rounded-lg p-2 shadow-sm">
-                  <img src={getTargetLogo(deal.target_id)} alt="Logo" className="h-full w-full object-contain" />
+          {filteredDeals.map((deal) => {
+            const target = getTargetCompany(deal.target_id);
+            return (
+              <Link key={deal.id} to={`/deals/${deal.slug}`} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md hover:border-indigo-200 transition group flex flex-col h-full">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="h-10 w-10 bg-white border border-slate-100 rounded-lg p-2 shadow-sm">
+                    <CompanyLogo 
+                      logoUrl={target?.logo_url} 
+                      name={target?.name || 'Target'} 
+                      className="h-full w-full" 
+                    />
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
+                    {deal.status}
+                  </span>
                 </div>
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
-                  {deal.status}
-                </span>
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition mb-3 line-clamp-2">
-                {deal.title}
-              </h3>
-              <div className="flex flex-wrap gap-2 text-[10px] text-slate-500 mb-6">
-                <div className="flex items-center space-x-1 bg-slate-50 px-2 py-1 rounded border border-slate-100">
-                  <Tag className="h-3 w-3" />
-                  <span>{deal.sector.split(' / ')[0]}</span>
+                <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition mb-3 line-clamp-2">
+                  {deal.title}
+                </h3>
+                <div className="flex flex-wrap gap-2 text-[10px] text-slate-500 mb-6">
+                  <div className="flex items-center space-x-1 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                    <Tag className="h-3 w-3" />
+                    <span>{deal.sector.split(' / ')[0]}</span>
+                  </div>
+                  <div className="flex items-center space-x-1 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                    <Globe className="h-3 w-3" />
+                    <span>{deal.geography}</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-1 bg-slate-50 px-2 py-1 rounded border border-slate-100">
-                  <Globe className="h-3 w-3" />
-                  <span>{deal.geography}</span>
+                <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center">
+                  <div className="text-lg font-serif font-bold text-slate-900">
+                    {deal.value_usd ? `$${(deal.value_usd / 1000000000).toFixed(1)}B` : 'Undisclosed'}
+                  </div>
+                  <div className="text-indigo-600 font-semibold text-sm flex items-center group-hover:translate-x-1 transition-transform">
+                    View <ChevronRight className="h-4 w-4 ml-1" />
+                  </div>
                 </div>
-              </div>
-              <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center">
-                <div className="text-lg font-serif font-bold text-slate-900">
-                  {deal.value_usd ? `$${(deal.value_usd / 1000000000).toFixed(1)}B` : 'Undisclosed'}
-                </div>
-                <div className="text-indigo-600 font-semibold text-sm flex items-center group-hover:translate-x-1 transition-transform">
-                  View <ChevronRight className="h-4 w-4 ml-1" />
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
