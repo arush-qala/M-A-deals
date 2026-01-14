@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Search, 
@@ -11,32 +11,62 @@ import {
   Tag, 
   Database,
   RefreshCcw,
-  Zap
+  Zap,
+  X,
+  ChevronDown,
+  DollarSign
 } from 'lucide-react';
 import { SEED_DEALS } from '../constants.tsx';
 import { DealStatus } from '../types.ts';
 
 const DealsExplorer: React.FC = () => {
   const [view, setView] = useState<'grid' | 'list'>('list');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  
+  const [sectorFilter, setSectorFilter] = useState<string>('All');
+  const [geoFilter, setGeoFilter] = useState<string>('All');
+  const [valueTier, setValueTier] = useState<string>('All');
+
   const handleRefresh = () => {
     setIsRefreshing(true);
-    // Simulate engine ingestion
-    setTimeout(() => {
-      setIsRefreshing(false);
-      // In a real app, this would re-fetch the query from the server
-    }, 2000);
+    setTimeout(() => setIsRefreshing(false), 1500);
   };
 
-  const filteredDeals = SEED_DEALS.filter(deal => {
-    const matchesSearch = deal.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         deal.sector.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || deal.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const resetFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('All');
+    setSectorFilter('All');
+    setGeoFilter('All');
+    setValueTier('All');
+  };
+
+  // Logic to determine unique sectors and geographies from data
+  const sectors = useMemo(() => ['All', ...new Set(SEED_DEALS.map(d => d.sector.split(' / ')[0]))], []);
+  const geographies = useMemo(() => ['All', ...new Set(SEED_DEALS.map(d => d.geography))], []);
+
+  const filteredDeals = useMemo(() => {
+    return SEED_DEALS.filter(deal => {
+      const matchesSearch = deal.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           deal.sector.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'All' || deal.status === statusFilter;
+      const matchesSector = sectorFilter === 'All' || deal.sector.includes(sectorFilter);
+      const matchesGeo = geoFilter === 'All' || deal.geography === geoFilter;
+      
+      let matchesValue = true;
+      if (valueTier !== 'All') {
+        const value = deal.value_usd || 0;
+        if (valueTier === 'small') matchesValue = value < 1000000000;
+        if (valueTier === 'mid') matchesValue = value >= 1000000000 && value <= 10000000000;
+        if (valueTier === 'mega') matchesValue = value > 10000000000;
+      }
+
+      return matchesSearch && matchesStatus && matchesSector && matchesGeo && matchesValue;
+    });
+  }, [searchQuery, statusFilter, sectorFilter, geoFilter, valueTier]);
 
   const getStatusColor = (status: DealStatus) => {
     switch (status) {
@@ -47,6 +77,8 @@ const DealsExplorer: React.FC = () => {
       default: return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
+
+  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'All' || sectorFilter !== 'All' || geoFilter !== 'All' || valueTier !== 'All';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -91,37 +123,128 @@ const DealsExplorer: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-2 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search by company, sector, or keyword..." 
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div className="md:col-span-7 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Search by company, sector, or keyword..." 
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <div className="md:col-span-3">
+              <div className="relative">
+                <select 
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-white font-medium text-slate-700"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="Announced">Announced</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Rumored">Rumored</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              </div>
+            </div>
+            
+            <div className="md:col-span-2">
+              <button 
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className={`w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg border transition font-bold ${showAdvanced ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}`}
+              >
+                <Filter className="h-4 w-4" />
+                <span>Filters</span>
+                {isAnyFilterActive && <span className="ml-1 h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>}
+              </button>
+            </div>
           </div>
-          
-          <div>
-            <select 
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none appearance-none bg-white"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+
+          {/* Advanced Filter Panel */}
+          {showAdvanced && (
+            <div className="mt-6 pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-2 duration-300">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                  <Tag className="h-3 w-3 mr-1" /> Sector Focus
+                </label>
+                <div className="relative">
+                  <select 
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none appearance-none"
+                    value={sectorFilter}
+                    onChange={(e) => setSectorFilter(e.target.value)}
+                  >
+                    {sectors.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                  <Globe className="h-3 w-3 mr-1" /> Geography
+                </label>
+                <div className="relative">
+                  <select 
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none appearance-none"
+                    value={geoFilter}
+                    onChange={(e) => setGeoFilter(e.target.value)}
+                  >
+                    {geographies.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                  <DollarSign className="h-3 w-3 mr-1" /> Value Tier
+                </label>
+                <div className="relative">
+                  <select 
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium outline-none appearance-none"
+                    value={valueTier}
+                    onChange={(e) => setValueTier(e.target.value)}
+                  >
+                    <option value="All">Any Enterprise Value</option>
+                    <option value="small">Small-Cap (&lt;$1B)</option>
+                    <option value="mid">Mid-Market ($1B - $10B)</option>
+                    <option value="mega">Mega-Deal (&gt;$10B)</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {isAnyFilterActive && (
+          <div className="bg-slate-50 border-t border-slate-100 px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center space-x-3 overflow-x-auto no-scrollbar py-1">
+              <span className="text-xs text-slate-400 whitespace-nowrap">Active filters:</span>
+              {statusFilter !== 'All' && <span className="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-bold text-indigo-600 uppercase">{statusFilter}</span>}
+              {sectorFilter !== 'All' && <span className="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-bold text-indigo-600 uppercase">{sectorFilter}</span>}
+              {geoFilter !== 'All' && <span className="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-bold text-indigo-600 uppercase">{geoFilter}</span>}
+              {valueTier !== 'All' && <span className="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-bold text-indigo-600 uppercase">{valueTier} Value</span>}
+            </div>
+            <button 
+              onClick={resetFilters}
+              className="text-[10px] font-bold text-slate-400 hover:text-red-500 uppercase tracking-widest flex items-center shrink-0 ml-4 transition"
             >
-              <option value="All">All Statuses</option>
-              <option value="Announced">Announced</option>
-              <option value="Completed">Completed</option>
-              <option value="Pending">Pending</option>
-              <option value="Withdrawn">Withdrawn</option>
-            </select>
+              <X className="h-3 w-3 mr-1" /> Clear All
+            </button>
           </div>
-          
-          <button className="flex items-center justify-center space-x-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition">
-            <Filter className="h-4 w-4" />
-            <span>Advanced Filters</span>
-          </button>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between mb-4 px-2">
+        <div className="text-xs text-slate-500 font-medium">
+          Showing <span className="font-bold text-slate-900">{filteredDeals.length}</span> verified results
         </div>
       </div>
 
@@ -151,7 +274,7 @@ const DealsExplorer: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="inline-flex items-center text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
-                        {deal.sector}
+                        {deal.sector.split(' / ')[0]}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">
@@ -171,41 +294,61 @@ const DealsExplorer: React.FC = () => {
             </table>
           </div>
           {filteredDeals.length === 0 && (
-            <div className="p-12 text-center">
-              <Database className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-              <p className="text-slate-500 font-medium">No deals found matching your criteria.</p>
+            <div className="p-20 text-center">
+              <div className="bg-slate-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                <Database className="h-8 w-8 text-slate-300" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-1">No matches found</h3>
+              <p className="text-slate-500 max-w-xs mx-auto mb-6 text-sm">Refine your search or adjust the advanced filters to find what you're looking for.</p>
+              <button 
+                onClick={resetFilters}
+                className="text-indigo-600 font-bold text-sm hover:underline"
+              >
+                Reset all filters
+              </button>
             </div>
           )}
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredDeals.map((deal) => (
-            <Link key={deal.id} to={`/deals/${deal.slug}`} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md hover:border-indigo-200 transition group">
+            <Link key={deal.id} to={`/deals/${deal.slug}`} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md hover:border-indigo-200 transition group flex flex-col h-full">
               <div className="flex justify-between items-start mb-4">
                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
                   {deal.status}
                 </span>
+                <span className="text-[10px] font-mono text-slate-400">{deal.announced_date}</span>
               </div>
               <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition mb-3 line-clamp-2">
                 {deal.title}
               </h3>
-              <div className="flex items-center space-x-2 text-xs text-slate-500 mb-6">
-                <Tag className="h-3 w-3" />
-                <span>{deal.sector}</span>
-                <span className="mx-1">•</span>
-                <Globe className="h-3 w-3" />
-                <span>{deal.geography}</span>
+              <div className="flex flex-wrap gap-2 text-[10px] text-slate-500 mb-6">
+                <div className="flex items-center space-x-1 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                  <Tag className="h-3 w-3" />
+                  <span>{deal.sector.split(' / ')[0]}</span>
+                </div>
+                <div className="flex items-center space-x-1 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                  <Globe className="h-3 w-3" />
+                  <span>{deal.geography}</span>
+                </div>
               </div>
               <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center">
                 <div className="text-lg font-serif font-bold text-slate-900">
                   {deal.value_usd ? `$${(deal.value_usd / 1000000000).toFixed(1)}B` : 'Undisclosed'}
                 </div>
                 <div className="text-indigo-600 font-semibold text-sm flex items-center group-hover:translate-x-1 transition-transform">
-                  View Case <ChevronRight className="h-4 w-4 ml-1" />
+                  View <ChevronRight className="h-4 w-4 ml-1" />
                 </div>
               </div>
             </Link>
           ))}
+          {filteredDeals.length === 0 && (
+            <div className="col-span-full py-20 text-center bg-white rounded-3xl border border-dashed border-slate-200">
+              <Database className="h-10 w-10 text-slate-200 mx-auto mb-4" />
+              <p className="text-slate-500 font-medium">No deals match your advanced criteria.</p>
+              <button onClick={resetFilters} className="mt-2 text-indigo-600 font-bold text-xs uppercase tracking-widest">Reset</button>
+            </div>
+          )}
         </div>
       )}
     </div>
