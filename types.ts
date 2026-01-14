@@ -26,6 +26,8 @@ export interface Deal {
   rationale?: string;
   sector: string;
   geography: string;
+  acquirer_id: string; // ID of the acquiring company
+  target_id: string;   // ID of the target company
   created_at: string;
   updated_at: string;
 }

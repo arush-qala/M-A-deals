@@ -16,7 +16,7 @@ import {
   ChevronDown,
   DollarSign
 } from 'lucide-react';
-import { SEED_DEALS } from '../constants.tsx';
+import { SEED_DEALS, SEED_COMPANIES } from '../constants.tsx';
 import { DealStatus } from '../types.ts';
 
 const DealsExplorer: React.FC = () => {
@@ -44,7 +44,6 @@ const DealsExplorer: React.FC = () => {
     setValueTier('All');
   };
 
-  // Logic to determine unique sectors and geographies from data
   const sectors = useMemo(() => ['All', ...new Set(SEED_DEALS.map(d => d.sector.split(' / ')[0]))], []);
   const geographies = useMemo(() => ['All', ...new Set(SEED_DEALS.map(d => d.geography))], []);
 
@@ -79,6 +78,10 @@ const DealsExplorer: React.FC = () => {
   };
 
   const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'All' || sectorFilter !== 'All' || geoFilter !== 'All' || valueTier !== 'All';
+
+  const getTargetLogo = (targetId: string) => {
+    return SEED_COMPANIES.find(c => c.id === targetId)?.logo_url;
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -166,7 +169,6 @@ const DealsExplorer: React.FC = () => {
             </div>
           </div>
 
-          {/* Advanced Filter Panel */}
           {showAdvanced && (
             <div className="mt-6 pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-2 duration-300">
               <div className="space-y-2">
@@ -242,12 +244,6 @@ const DealsExplorer: React.FC = () => {
         )}
       </div>
 
-      <div className="flex items-center justify-between mb-4 px-2">
-        <div className="text-xs text-slate-500 font-medium">
-          Showing <span className="font-bold text-slate-900">{filteredDeals.length}</span> verified results
-        </div>
-      </div>
-
       {view === 'list' ? (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -269,8 +265,15 @@ const DealsExplorer: React.FC = () => {
                       {new Date(deal.announced_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition truncate max-w-xs">{deal.title}</div>
-                      <div className="text-xs text-slate-400 mt-1">{deal.geography}</div>
+                      <div className="flex items-center space-x-3">
+                        <div className="h-8 w-8 bg-slate-50 border border-slate-200 rounded p-1 flex-shrink-0">
+                          <img src={getTargetLogo(deal.target_id)} alt="Logo" className="h-full w-full object-contain" />
+                        </div>
+                        <div className="truncate max-w-xs">
+                          <div className="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition">{deal.title}</div>
+                          <div className="text-[10px] text-slate-400">{deal.geography}</div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="inline-flex items-center text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
@@ -295,17 +298,9 @@ const DealsExplorer: React.FC = () => {
           </div>
           {filteredDeals.length === 0 && (
             <div className="p-20 text-center">
-              <div className="bg-slate-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                <Database className="h-8 w-8 text-slate-300" />
-              </div>
+              <Database className="h-8 w-8 text-slate-300 mx-auto mb-4" />
               <h3 className="text-lg font-bold text-slate-900 mb-1">No matches found</h3>
-              <p className="text-slate-500 max-w-xs mx-auto mb-6 text-sm">Refine your search or adjust the advanced filters to find what you're looking for.</p>
-              <button 
-                onClick={resetFilters}
-                className="text-indigo-600 font-bold text-sm hover:underline"
-              >
-                Reset all filters
-              </button>
+              <button onClick={resetFilters} className="text-indigo-600 font-bold text-sm hover:underline">Reset all filters</button>
             </div>
           )}
         </div>
@@ -314,10 +309,12 @@ const DealsExplorer: React.FC = () => {
           {filteredDeals.map((deal) => (
             <Link key={deal.id} to={`/deals/${deal.slug}`} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md hover:border-indigo-200 transition group flex flex-col h-full">
               <div className="flex justify-between items-start mb-4">
+                <div className="h-10 w-10 bg-white border border-slate-100 rounded-lg p-2 shadow-sm">
+                  <img src={getTargetLogo(deal.target_id)} alt="Logo" className="h-full w-full object-contain" />
+                </div>
                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
                   {deal.status}
                 </span>
-                <span className="text-[10px] font-mono text-slate-400">{deal.announced_date}</span>
               </div>
               <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition mb-3 line-clamp-2">
                 {deal.title}
@@ -342,13 +339,6 @@ const DealsExplorer: React.FC = () => {
               </div>
             </Link>
           ))}
-          {filteredDeals.length === 0 && (
-            <div className="col-span-full py-20 text-center bg-white rounded-3xl border border-dashed border-slate-200">
-              <Database className="h-10 w-10 text-slate-200 mx-auto mb-4" />
-              <p className="text-slate-500 font-medium">No deals match your advanced criteria.</p>
-              <button onClick={resetFilters} className="mt-2 text-indigo-600 font-bold text-xs uppercase tracking-widest">Reset</button>
-            </div>
-          )}
         </div>
       )}
     </div>

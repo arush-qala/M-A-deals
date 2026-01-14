@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -16,8 +16,8 @@ import {
   AlertCircle,
   Sparkles
 } from 'lucide-react';
-import { SEED_DEALS, SEED_COMPANIES } from '../constants';
-import { Deal, Company, DealStatus } from '../types';
+import { SEED_DEALS, SEED_COMPANIES } from '../constants.tsx';
+import { Deal, Company, DealStatus } from '../types.ts';
 
 const DealProfile: React.FC = () => {
   const { slug } = useParams();
@@ -34,12 +34,16 @@ const DealProfile: React.FC = () => {
     setIsLoading(false);
   }, [slug]);
 
+  // Resolve companies
+  const acquirer = useMemo(() => deal ? SEED_COMPANIES.find(c => c.id === deal.acquirer_id) : null, [deal]);
+  const target = useMemo(() => deal ? SEED_COMPANIES.find(c => c.id === deal.target_id) : null, [deal]);
+
   const handleSaveDeal = () => {
     alert("Deal saved to your watchlist!");
     navigate('/app/watchlists');
   };
 
-  if (isLoading) return <div className="p-20 text-center font-serif text-xl animate-pulse">Accessing Secure Terminal...</div>;
+  if (isLoading) return <div className="p-20 text-center font-serif text-xl animate-pulse text-indigo-900">Accessing Secure Terminal...</div>;
   if (!deal) return <div className="p-20 text-center">Deal not found. <Link to="/deals" className="text-indigo-600 underline">Back to Explorer</Link></div>;
 
   const getStatusColor = (status: DealStatus) => {
@@ -52,10 +56,8 @@ const DealProfile: React.FC = () => {
     }
   };
 
-  // Visibility logic for specific modules
   const hasRationale = !!deal.rationale;
   const hasValue = !!deal.value_usd;
-  const hasParties = true; // Simplified for demo
   const hasTimeline = deal.status !== 'Rumored';
 
   return (
@@ -151,25 +153,37 @@ const DealProfile: React.FC = () => {
               </div>
             </section>
 
-            {/* Parties Section (Conditional Rendering) */}
-            {hasParties && (
-              <div className="grid md:grid-cols-2 gap-8">
-                {SEED_COMPANIES.slice(0, 2).map((comp, i) => (
-                  <div key={i} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm group hover:border-indigo-200 transition">
-                    <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-4">{i === 0 ? 'Lead Acquirer' : 'Target Entity'}</div>
-                    <div className="flex items-center space-x-4">
-                      <div className="h-16 w-16 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center overflow-hidden">
-                        <img src={comp.logo_url} alt={comp.name} className="h-12 w-12 object-contain" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-slate-900">{comp.name}</h3>
-                        <p className="text-sm text-slate-500">{comp.sector}</p>
-                      </div>
+            {/* Parties Section */}
+            <div className="grid md:grid-cols-2 gap-8">
+              {acquirer && (
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm group hover:border-indigo-200 transition">
+                  <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-4">Lead Acquirer</div>
+                  <div className="flex items-center space-x-4">
+                    <div className="h-16 w-16 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center overflow-hidden p-2">
+                      <img src={acquirer.logo_url} alt={acquirer.name} className="h-full w-full object-contain" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">{acquirer.name}</h3>
+                      <p className="text-sm text-slate-500">{acquirer.sector}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              )}
+              {target && (
+                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm group hover:border-indigo-200 transition">
+                  <div className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mb-4">Target Entity</div>
+                  <div className="flex items-center space-x-4">
+                    <div className="h-16 w-16 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center overflow-hidden p-2">
+                      <img src={target.logo_url} alt={target.name} className="h-full w-full object-contain" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">{target.name}</h3>
+                      <p className="text-sm text-slate-500">{target.sector}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Timeline Module */}
             {hasTimeline && (
@@ -226,7 +240,7 @@ const DealProfile: React.FC = () => {
               <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-900 mb-6">Market Response</h3>
                 <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-                  <div className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1">Stock Performance (Acquirer)</div>
+                  <div className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-1">Stock Performance ({acquirer?.name.split(' ')[0]})</div>
                   <div className="text-2xl font-bold text-emerald-700">+2.45%</div>
                   <p className="text-[10px] text-emerald-600 mt-1">Institutional sentiment remains bullish on synergy projections.</p>
                 </div>

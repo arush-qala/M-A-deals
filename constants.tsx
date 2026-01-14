@@ -1,5 +1,5 @@
 
-import { Deal, Company } from './types';
+import { Deal, Company } from './types.ts';
 
 export const SEED_COMPANIES: Company[] = [
   { id: 'c1', name: 'Apple Inc.', sector: 'Technology', headquarters: 'Cupertino, USA', logo_url: 'https://logo.clearbit.com/apple.com' },
@@ -39,6 +39,8 @@ export const SEED_DEALS: Deal[] = [
     rationale: 'The acquisition is seen as a pivotal move for Apple’s long-rumored autonomous vehicle and spatial computing initiatives, securing industry-leading lidar technology for future hardware iterations.',
     sector: 'Autonomous Systems / Tech',
     geography: 'North America',
+    acquirer_id: 'c1',
+    target_id: 'c2',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -56,6 +58,8 @@ export const SEED_DEALS: Deal[] = [
     rationale: 'Disney aims to create a persistent digital "Disney Universe" within Fortnite and Unreal Engine, integrating its IP into a multi-generational gaming ecosystem.',
     sector: 'Media / Gaming',
     geography: 'Global',
+    acquirer_id: 'c3',
+    target_id: 'c4',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -73,6 +77,8 @@ export const SEED_DEALS: Deal[] = [
     rationale: 'This marks the largest energy transition acquisition by a US supermajor, immediately positioning Chevron as a global leader in renewable power generation.',
     sector: 'Energy / Renewables',
     geography: 'Europe / USA',
+    acquirer_id: 'c5',
+    target_id: 'c6',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -90,6 +96,8 @@ export const SEED_DEALS: Deal[] = [
     rationale: 'Runway\'s technology will be integrated into Adobe Premiere Pro and After Effects, strengthening Adobe\'s position against emerging generative video platforms.',
     sector: 'Software / AI',
     geography: 'North America',
+    acquirer_id: 'c15',
+    target_id: 'c16',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -107,6 +115,8 @@ export const SEED_DEALS: Deal[] = [
     rationale: 'The acquisition would give JPMorgan an immediate, massive footprint in the Latin American consumer market and a best-in-class digital banking platform.',
     sector: 'Financial Services / Fintech',
     geography: 'Latin America',
+    acquirer_id: 'c17',
+    target_id: 'c18',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -124,6 +134,8 @@ export const SEED_DEALS: Deal[] = [
     rationale: 'Direct ownership of the supply chain is a key pillar of Tesla\'s strategy to lower the cost per kilowatt-hour of its 4680 battery cells.',
     sector: 'Automotive / Materials',
     geography: 'South America',
+    acquirer_id: 'c13',
+    target_id: 'c14',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -141,6 +153,8 @@ export const SEED_DEALS: Deal[] = [
     rationale: 'Combining Google\'s data scale with CrowdStrike\'s endpoint protection creates a formidable competitor to Microsoft\'s security suite.',
     sector: 'Technology / Cybersecurity',
     geography: 'North America',
+    acquirer_id: 'c7',
+    target_id: 'c8',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -158,6 +172,8 @@ export const SEED_DEALS: Deal[] = [
     rationale: 'Viking’s oral and injectable candidates for metabolic disorders provide a next-generation platform to complement Lilly\'s existing Zepbound portfolio.',
     sector: 'Pharmaceuticals / Biotech',
     geography: 'North America',
+    acquirer_id: 'c9',
+    target_id: 'c10',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -175,6 +191,8 @@ export const SEED_DEALS: Deal[] = [
     rationale: 'Amazon seeks to internalize Exotec\'s specialized high-density storage robotics to further automate its third-party fulfillment centers.',
     sector: 'Retail / Robotics',
     geography: 'Europe',
+    acquirer_id: 'c19',
+    target_id: 'c20',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -192,6 +210,8 @@ export const SEED_DEALS: Deal[] = [
     rationale: 'Airwallex’s strong presence in APAC and robust FX infrastructure will accelerate Stripe’s expansion into the Asian enterprise market.',
     sector: 'Fintech',
     geography: 'Global',
+    acquirer_id: 'c11',
+    target_id: 'c12',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   }

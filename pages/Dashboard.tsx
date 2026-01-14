@@ -11,9 +11,13 @@ import {
   ArrowUpRight,
   PieChart
 } from 'lucide-react';
-import { SEED_DEALS } from '../constants';
+import { SEED_DEALS, SEED_COMPANIES } from '../constants.tsx';
 
 const Dashboard: React.FC = () => {
+  const getTargetLogo = (targetId: string) => {
+    return SEED_COMPANIES.find(c => c.id === targetId)?.logo_url;
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="flex items-center justify-between mb-10">
@@ -60,8 +64,8 @@ const Dashboard: React.FC = () => {
               {SEED_DEALS.slice(0, 5).map((deal, i) => (
                 <Link key={i} to={`/deals/${deal.slug}`} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition group">
                   <div className="flex items-center space-x-4">
-                    <div className="h-10 w-10 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover:text-indigo-500 transition">
-                      <Clock className="h-5 w-5" />
+                    <div className="h-10 w-10 bg-white border border-slate-100 rounded flex items-center justify-center p-1.5 shadow-xs">
+                      <img src={getTargetLogo(deal.target_id)} alt="Logo" className="h-full w-full object-contain" />
                     </div>
                     <div>
                       <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition">{deal.title.split(' to ')[0]}</div>
@@ -78,12 +82,12 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-slate-900 rounded-2xl p-6 text-white overflow-hidden relative">
+          <div className="bg-slate-900 rounded-2xl p-6 text-white overflow-hidden relative shadow-xl">
             <div className="absolute top-0 right-0 p-4 opacity-10">
               <PieChart className="h-24 w-24" />
             </div>
             <h3 className="text-lg font-bold mb-4 relative z-10">Institutional Report</h3>
-            <p className="text-slate-400 text-sm mb-6 relative z-10">Weekly M&A market sentiment and trend analysis for Q4 2024 is now available.</p>
+            <p className="text-slate-400 text-sm mb-6 relative z-10">Weekly M&A market sentiment and trend analysis for Q1 2026 is now available.</p>
             <button className="w-full bg-white text-slate-900 py-2.5 rounded-xl font-bold hover:bg-slate-100 transition relative z-10 text-sm">
               Download PDF
             </button>
@@ -93,8 +97,8 @@ const Dashboard: React.FC = () => {
             <h3 className="font-bold text-slate-900 mb-4">Upcoming Deadlines</h3>
             <div className="space-y-4">
               {[
-                { label: 'Regulatory Filing: NVIDIA', date: 'Oct 24' },
-                { label: 'Shareholder Vote: Slack', date: 'Oct 29' }
+                { label: 'Regulatory Filing: CrowdStrike', date: 'Feb 12' },
+                { label: 'Shareholder Vote: Airwallex', date: 'Feb 28' }
               ].map((item, i) => (
                 <div key={i} className="flex items-center space-x-3 text-sm">
                   <div className="h-2 w-2 rounded-full bg-amber-500"></div>
