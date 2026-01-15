@@ -49,7 +49,7 @@ const DealsExplorer: React.FC = () => {
   const geographies = useMemo(() => ['All', ...new Set(SEED_DEALS.map(d => d.geography))], []);
 
   const filteredDeals = useMemo(() => {
-    return SEED_DEALS.filter(deal => {
+    const results = SEED_DEALS.filter(deal => {
       const matchesSearch = deal.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            deal.sector.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'All' || deal.status === statusFilter;
@@ -66,6 +66,9 @@ const DealsExplorer: React.FC = () => {
 
       return matchesSearch && matchesStatus && matchesSector && matchesGeo && matchesValue;
     });
+
+    // SORTING: Newest announcement date first
+    return results.sort((a, b) => new Date(b.announced_date).getTime() - new Date(a.announced_date).getTime());
   }, [searchQuery, statusFilter, sectorFilter, geoFilter, valueTier]);
 
   const getStatusColor = (status: DealStatus) => {
