@@ -25,6 +25,7 @@ export interface Deal {
   status: DealStatus;
   visibility: DealVisibility;
   announced_date: string;
+  expected_close?: string; // e.g. "Q2 2025", "Mid 2026"
   value_usd?: number;
   currency: string;
   percent_acquired?: number;

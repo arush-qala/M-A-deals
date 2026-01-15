@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   AlertCircle,
   Sparkles,
-  TrendingDown
+  TrendingDown,
+  Clock
 } from 'lucide-react';
 import { SEED_DEALS, SEED_COMPANIES } from '../constants.tsx';
 import { Deal, Company, DealStatus } from '../types.ts';
@@ -212,11 +213,16 @@ const DealProfile: React.FC = () => {
                       <p className="text-sm text-slate-500 mt-1">Transaction revealed via joint regulatory statement.</p>
                     </div>
                   </div>
-                  <div className="relative pl-8 opacity-40">
-                    <div className="absolute left-0 top-1.5 h-4 w-4 rounded-full border-4 border-white bg-slate-300 shadow-sm"></div>
+                  <div className="relative pl-8">
+                    <div className="absolute left-0 top-1.5 h-4 w-4 rounded-full border-4 border-slate-100 bg-white shadow-sm flex items-center justify-center">
+                      <div className="h-1.5 w-1.5 bg-slate-300 rounded-full"></div>
+                    </div>
                     <div>
-                      <div className="text-xs font-mono text-slate-400 mb-1">Expected TBD</div>
-                      <div className="font-bold text-slate-900">Estimated Closing</div>
+                      <div className="text-xs font-mono text-indigo-600 mb-1 font-bold">
+                        {deal.expected_close || 'TBD'}
+                      </div>
+                      <div className="font-bold text-slate-900">Expected Closing</div>
+                      <p className="text-sm text-slate-500 mt-1">Target consummation date subject to regulatory approval.</p>
                     </div>
                   </div>
                 </div>
@@ -244,6 +250,15 @@ const DealProfile: React.FC = () => {
                       <span className="text-sm font-bold text-white">{term.value}</span>
                     </div>
                   ))}
+                  
+                  {deal.expected_close && (
+                    <div className="mt-6 pt-6 border-t border-white/10">
+                       <div className="text-xs text-indigo-300 font-medium uppercase tracking-wider mb-2 flex items-center">
+                         <Clock className="h-3 w-3 mr-1" /> Closing Target
+                       </div>
+                       <div className="text-xl font-bold text-white">{deal.expected_close}</div>
+                    </div>
+                  )}
                 </div>
               </div>
 
