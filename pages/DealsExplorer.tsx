@@ -10,7 +10,6 @@ import {
   Globe, 
   Tag, 
   Database,
-  RefreshCcw,
   Zap,
   X,
   ChevronDown,
@@ -22,7 +21,6 @@ import CompanyLogo from '../components/CompanyLogo.tsx';
 
 const DealsExplorer: React.FC = () => {
   const [view, setView] = useState<'grid' | 'list'>('list');
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   
   // Filter States
@@ -31,11 +29,6 @@ const DealsExplorer: React.FC = () => {
   const [sectorFilter, setSectorFilter] = useState<string>('All');
   const [geoFilter, setGeoFilter] = useState<string>('All');
   const [valueTier, setValueTier] = useState<string>('All');
-
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1500);
-  };
 
   const resetFilters = () => {
     setSearchQuery('');
@@ -100,19 +93,6 @@ const DealsExplorer: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-3">
-          <button 
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl font-bold transition shadow-sm border ${
-              isRefreshing 
-              ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' 
-              : 'bg-white text-slate-900 border-slate-200 hover:bg-slate-50 active:scale-95'
-            }`}
-          >
-            <RefreshCcw className={`h-4 w-4 ${isRefreshing ? 'animate-spin text-indigo-500' : 'text-slate-400'}`} />
-            <span>{isRefreshing ? 'Polling Sources...' : 'Sync Latest Signal'}</span>
-          </button>
-
           <div className="flex items-center space-x-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button 
               onClick={() => setView('list')} 
