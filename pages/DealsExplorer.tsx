@@ -13,11 +13,35 @@ import {
   Zap,
   X,
   ChevronDown,
-  DollarSign
+  DollarSign,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { SEED_DEALS, SEED_COMPANIES } from '../constants.tsx';
-import { DealStatus } from '../types.ts';
+import { DealStatus, Deal } from '../types.ts';
 import CompanyLogo from '../components/CompanyLogo.tsx';
+
+// Helper to safely access nested properties for sorting
+const getSortValue = (deal: Deal, key: string): string | number => {
+  if (key === 'target_name') {
+    const target = SEED_COMPANIES.find(c => c.id === deal.target_id);
+    return target?.name || '';
+  }
+  return deal[key as keyof Deal] as string | number || '';
+};
+
+const formatCurrency = (value: number | undefined) => {
+  if (!value) return 'Undisclosed';
+  
+  if (value >= 1e9) {
+    return `$${(value / 1e9).toFixed(1)}B`;
+  } else if (value >= 1e6) {
+    return `$${(value / 1e6).toFixed(1)}M`;
+  } else {
+    return `$${value.toLocaleString()}`;
+  }
+};
 
 const DealsExplorer: React.FC = () => {
   const [view, setView] = useState<'grid' | 'list'>('list');
@@ -30,19 +54,34 @@ const DealsExplorer: React.FC = () => {
   const [geoFilter, setGeoFilter] = useState<string>('All');
   const [valueTier, setValueTier] = useState<string>('All');
 
+  // Sorting State
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
+    key: 'announced_date',
+    direction: 'desc',
+  });
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
   const resetFilters = () => {
     setSearchQuery('');
     setStatusFilter('All');
     setSectorFilter('All');
     setGeoFilter('All');
     setValueTier('All');
+    setSortConfig({ key: 'announced_date', direction: 'desc' });
   };
 
   const sectors = useMemo(() => ['All', ...new Set(SEED_DEALS.map(d => d.sector.split(' / ')[0]))], []);
   const geographies = useMemo(() => ['All', ...new Set(SEED_DEALS.map(d => d.geography))], []);
 
   const filteredDeals = useMemo(() => {
-    const results = SEED_DEALS.filter(deal => {
+    let results = SEED_DEALS.filter(deal => {
       const matchesSearch = deal.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            deal.sector.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'All' || deal.status === statusFilter;
@@ -60,9 +99,32 @@ const DealsExplorer: React.FC = () => {
       return matchesSearch && matchesStatus && matchesSector && matchesGeo && matchesValue;
     });
 
-    // SORTING: Newest announcement date first
-    return results.sort((a, b) => new Date(b.announced_date).getTime() - new Date(a.announced_date).getTime());
-  }, [searchQuery, statusFilter, sectorFilter, geoFilter, valueTier]);
+    // Sorting Logic
+    results.sort((a, b) => {
+      let aValue = getSortValue(a, sortConfig.key);
+      let bValue = getSortValue(b, sortConfig.key);
+
+      // Handle Dates
+      if (sortConfig.key === 'announced_date') {
+        aValue = new Date(a.announced_date).getTime();
+        bValue = new Date(b.announced_date).getTime();
+      }
+
+      // Handle undefined/nulls (push to bottom)
+      if (aValue === '' || aValue === undefined) return 1;
+      if (bValue === '' || bValue === undefined) return -1;
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+
+    return results;
+  }, [searchQuery, statusFilter, sectorFilter, geoFilter, valueTier, sortConfig]);
 
   const getStatusColor = (status: DealStatus) => {
     switch (status) {
@@ -70,6 +132,7 @@ const DealsExplorer: React.FC = () => {
       case 'Announced': return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'Pending': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'Rumored': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'Withdrawn': return 'bg-slate-50 text-slate-500 border-slate-200';
       default: return 'bg-slate-50 text-slate-700 border-slate-200';
     }
   };
@@ -78,6 +141,13 @@ const DealsExplorer: React.FC = () => {
 
   const getTargetCompany = (targetId: string) => {
     return SEED_COMPANIES.find(c => c.id === targetId);
+  };
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig.key !== columnKey) return <ArrowUpDown className="h-3 w-3 text-slate-300 ml-1" />;
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="h-3 w-3 text-indigo-600 ml-1" />
+      : <ArrowDown className="h-3 w-3 text-indigo-600 ml-1" />;
   };
 
   return (
@@ -93,6 +163,7 @@ const DealsExplorer: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-3">
+          {/* View Toggle Buttons */}
           <div className="flex items-center space-x-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
             <button 
               onClick={() => setView('list')} 
@@ -136,6 +207,7 @@ const DealsExplorer: React.FC = () => {
                   <option value="Completed">Completed</option>
                   <option value="Pending">Pending</option>
                   <option value="Rumored">Rumored</option>
+                  <option value="Withdrawn">Withdrawn</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
               </div>
@@ -234,11 +306,36 @@ const DealsExplorer: React.FC = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Announced</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Transaction</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Sector</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Value (USD)</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4">
+                    <button onClick={() => handleSort('announced_date')} className="flex items-center text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-indigo-600 transition">
+                      Announced
+                      <SortIcon columnKey="announced_date" />
+                    </button>
+                  </th>
+                  <th className="px-6 py-4">
+                    <button onClick={() => handleSort('title')} className="flex items-center text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-indigo-600 transition">
+                      Transaction
+                      <SortIcon columnKey="title" />
+                    </button>
+                  </th>
+                  <th className="px-6 py-4">
+                    <button onClick={() => handleSort('sector')} className="flex items-center text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-indigo-600 transition">
+                      Sector
+                      <SortIcon columnKey="sector" />
+                    </button>
+                  </th>
+                  <th className="px-6 py-4">
+                    <button onClick={() => handleSort('value_usd')} className="flex items-center text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-indigo-600 transition">
+                      Value
+                      <SortIcon columnKey="value_usd" />
+                    </button>
+                  </th>
+                  <th className="px-6 py-4">
+                    <button onClick={() => handleSort('status')} className="flex items-center text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-indigo-600 transition">
+                      Status
+                      <SortIcon columnKey="status" />
+                    </button>
+                  </th>
                   <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Details</th>
                 </tr>
               </thead>
@@ -271,7 +368,7 @@ const DealsExplorer: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">
-                        {deal.value_usd ? `$${(deal.value_usd / 1000000).toLocaleString()}M` : 'Undisclosed'}
+                        {formatCurrency(deal.value_usd)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
@@ -328,7 +425,7 @@ const DealsExplorer: React.FC = () => {
                 </div>
                 <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center">
                   <div className="text-lg font-serif font-bold text-slate-900">
-                    {deal.value_usd ? `$${(deal.value_usd / 1000000000).toFixed(1)}B` : 'Undisclosed'}
+                    {formatCurrency(deal.value_usd)}
                   </div>
                   <div className="text-indigo-600 font-semibold text-sm flex items-center group-hover:translate-x-1 transition-transform">
                     View <ChevronRight className="h-4 w-4 ml-1" />
