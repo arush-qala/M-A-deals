@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin, isSupabaseAdminConfigured } from './lib/supabase-admin';
+import { supabaseAdmin, isSupabaseAdminConfigured } from './lib/supabase-admin.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow GET

@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin, isSupabaseAdminConfigured } from './lib/supabase-admin';
-import { fetchSECDeals } from './lib/sources/sec-edgar';
-import { fetchGlobalDeals, checkDealStatusUpdates } from './lib/sources/perplexity';
-import { normalizeCompanyName, parseStatus, detectSector, detectGeography, generateSlug, generateTitle } from './lib/parser';
-import { deduplicateDeals } from './lib/deduplication';
-import { verifyDeals, getVerificationSummary } from './lib/verification';
-import type { ParsedDeal } from './lib/parser';
+import { supabaseAdmin, isSupabaseAdminConfigured } from './lib/supabase-admin.js';
+import { fetchSECDeals } from './lib/sources/sec-edgar.js';
+import { fetchGlobalDeals, checkDealStatusUpdates } from './lib/sources/perplexity.js';
+import { normalizeCompanyName, parseStatus, detectSector, detectGeography, generateSlug, generateTitle } from './lib/parser.js';
+import { deduplicateDeals } from './lib/deduplication.js';
+import { verifyDeals, getVerificationSummary } from './lib/verification.js';
+import type { ParsedDeal } from './lib/parser.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow POST for manual sync, GET for scheduled

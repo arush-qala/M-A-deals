@@ -1,8 +1,8 @@
 // Multi-source verification framework
 
-import type { ParsedDeal } from './parser';
-import type { VerificationStatus } from '../../types';
-import { verifyDeal as perplexityVerify } from './sources/perplexity';
+import type { ParsedDeal } from './parser.js';
+import type { VerificationStatus } from '../../types.js';
+import { verifyDeal as perplexityVerify } from './sources/perplexity.js';
 
 export interface VerificationResult {
   confidenceScore: number;

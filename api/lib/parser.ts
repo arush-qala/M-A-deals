@@ -1,6 +1,6 @@
 // Deal text extraction and normalization utilities
 
-import type { DealStatus } from '../../types';
+import type { DealStatus } from '../../types.js';
 
 export interface ParsedDeal {
   acquirer: string;

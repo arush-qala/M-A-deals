@@ -1,7 +1,7 @@
 // Deduplication logic to prevent duplicate deals
 
-import { normalizeCompanyName } from './parser';
-import type { ParsedDeal } from './parser';
+import { normalizeCompanyName } from './parser.js';
+import type { ParsedDeal } from './parser.js';
 
 export interface DedupeKey {
   acquirer: string;
