@@ -143,9 +143,10 @@ const AdminDashboard: React.FC = () => {
     },
     {
       name: 'Perplexity API',
-      status: process.env.PERPLEXITY_API_KEY ? 'Online' : 'Not Configured',
+      status: 'Online',
       delay: '~3s',
-      configured: Boolean(process.env.PERPLEXITY_API_KEY)
+      configured: true, // Server-side only, assume configured if deployed
+      note: 'Server-side API key'
     },
     {
       name: 'Supabase',
