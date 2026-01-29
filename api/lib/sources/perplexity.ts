@@ -10,6 +10,10 @@ export interface PerplexityDeal {
   sector: string;
   geography: string;
   synopsis: string;
+  payment_structure?: string;
+  breakup_fee?: string;
+  acquirer_domain?: string;
+  target_domain?: string;
   sources: Array<{ url: string; publication: string }>;
 }
 
@@ -48,6 +52,10 @@ For each deal, provide:
 5. Announcement date (YYYY-MM-DD format)
 6. Sector (Technology, Healthcare, Financial Services, Energy, etc.)
 7. A brief synopsis (1-2 sentences)
+8. Payment structure (Cash, Stock, Mixed Cash/Stock, or Unknown)
+9. Breakup fee (e.g., "3.5% of EV", "None", or "Unknown")
+10. Acquirer company website domain (e.g., "microsoft.com")
+11. Target company website domain (e.g., "activision.com")
 
 Return the data as a JSON array with this structure:
 {
@@ -60,7 +68,11 @@ Return the data as a JSON array with this structure:
       "announced_date": "2025-01-15",
       "sector": "Technology",
       "geography": "${region}",
-      "synopsis": "Company A announced acquisition of Company B..."
+      "synopsis": "Company A announced acquisition of Company B...",
+      "payment_structure": "Mixed Cash/Stock",
+      "breakup_fee": "3.5% of EV",
+      "acquirer_domain": "companya.com",
+      "target_domain": "companyb.com"
     }
   ]
 }

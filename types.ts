@@ -37,11 +37,14 @@ export interface Deal {
   geography: string;
   acquirer_id: string; // ID of the acquiring company
   target_id: string;   // ID of the target company
+  payment_structure?: string; // e.g., "Mixed Cash/Stock", "All Cash", "All Stock"
+  breakup_fee?: string; // e.g., "3.5% of EV", "None"
   market_response?: MarketResponse; // Optional, only for public companies with verified data
   // Sync & verification fields
   confidence_score?: number; // 0-100 verification score
   verification_status?: VerificationStatus;
   external_id?: string; // Unique ID from source (e.g., SEC accession number)
+  deal_terms_fetched?: boolean; // Whether payment structure and breakup fee have been fetched
   sources?: DealSource[]; // Sources for this deal
   created_at: string;
   updated_at: string;

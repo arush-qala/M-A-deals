@@ -357,10 +357,9 @@ const DealProfile: React.FC = () => {
                 </h3>
                 <div className="space-y-6">
                   {[
-                    { label: 'Payment Structure', value: 'Mixed Cash/Stock' },
+                    { label: 'Payment Structure', value: deal.payment_structure || 'Not disclosed' },
                     { label: 'Control acquired', value: deal.percent_acquired ? `${deal.percent_acquired}%` : '100%' },
-                    { label: 'Breakup Fee', value: '3.5% of EV' },
-                    { label: 'Advisory Panel', value: 'Active' }
+                    { label: 'Breakup Fee', value: deal.breakup_fee || 'Not disclosed' }
                   ].map((term, i) => (
                     <div key={i} className="flex justify-between items-center pb-4 border-b border-white/10 last:border-0 last:pb-0">
                       <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">{term.label}</span>

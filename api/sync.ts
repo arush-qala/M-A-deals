@@ -7,6 +7,102 @@ import { deduplicateDeals } from './lib/deduplication.js';
 import { verifyDeals, getVerificationSummary } from './lib/verification.js';
 import type { ParsedDeal } from './lib/parser.js';
 
+// Helper function to fetch company logo from domain
+async function fetchCompanyLogo(domain: string): Promise<string | null> {
+  if (!domain) return null;
+
+  try {
+    // Try multiple favicon services
+    const services = [
+      `https://logo.clearbit.com/${domain}`,
+      `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+      `https://icon.horse/icon/${domain}`
+    ];
+
+    for (const url of services) {
+      try {
+        const response = await fetch(url, {
+          method: 'HEAD',
+          signal: AbortSignal.timeout(3000) // 3 second timeout
+        });
+
+        if (response.ok) {
+          return url;
+        }
+      } catch {
+        continue; // Try next service
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Failed to fetch logo for ${domain}:`, error);
+    return null;
+  }
+}
+
+// Helper function to create or update company with logo
+async function upsertCompany(name: string, domain: string | undefined, isAcquirer: boolean): Promise<string | null> {
+  if (!name) return null;
+
+  try {
+    const normalizedName = normalizeCompanyName(name);
+
+    // Check if company exists
+    const { data: existing } = await supabaseAdmin
+      .from('companies')
+      .select('id, logo_url, logo_fetched')
+      .eq('name_normalized', normalizedName)
+      .single();
+
+    if (existing) {
+      // If logo not fetched yet and we have a domain, fetch it
+      if (!existing.logo_fetched && domain) {
+        const logoUrl = await fetchCompanyLogo(domain);
+        if (logoUrl) {
+          await supabaseAdmin
+            .from('companies')
+            .update({
+              logo_url: logoUrl,
+              logo_fetched: true,
+              website: domain,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existing.id);
+        }
+      }
+      return existing.id;
+    } else {
+      // Create new company
+      const logoUrl = domain ? await fetchCompanyLogo(domain) : null;
+
+      const { data: newCompany, error: insertError } = await supabaseAdmin
+        .from('companies')
+        .insert({
+          name: name,
+          name_normalized: normalizedName,
+          website: domain,
+          logo_url: logoUrl,
+          logo_fetched: !!logoUrl,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select('id')
+        .single();
+
+      if (insertError) {
+        console.error('Failed to create company:', insertError);
+        return null;
+      }
+
+      return newCompany?.id || null;
+    }
+  } catch (error) {
+    console.error(`Failed to upsert company ${name}:`, error);
+    return null;
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow POST for manual sync, GET for scheduled
   if (req.method !== 'POST' && req.method !== 'GET') {
@@ -89,6 +185,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         sector: d.sector,
         geography: d.geography,
         synopsis: d.synopsis,
+        payment_structure: d.payment_structure,
+        breakup_fee: d.breakup_fee,
+        acquirer_domain: d.acquirer_domain,
+        target_domain: d.target_domain,
         sources: d.sources.map(s => ({
           url: s.url,
           publication: s.publication,
@@ -129,25 +229,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Generate slug
         const slug = generateSlug(deal.acquirer, deal.target, deal.announced_date);
 
+        // Upsert companies and get their IDs
+        const acquirerId = await upsertCompany(deal.acquirer, deal.acquirer_domain, true);
+        const targetId = await upsertCompany(deal.target, deal.target_domain, false);
+
         // Check if deal exists
         const { data: existing } = await supabaseAdmin
           .from('deals')
-          .select('id, status')
+          .select('id, status, deal_terms_fetched, acquirer_id, target_id')
           .eq('slug', slug)
           .single();
 
         if (existing) {
-          // Update existing deal
+          // Update existing deal - only update deal terms if not already fetched
+          const updateData: any = {
+            status: deal.status,
+            value_usd: deal.value_usd,
+            synopsis: deal.synopsis,
+            confidence_score: deal.confidenceScore,
+            verification_status: deal.verificationStatus,
+            updated_at: new Date().toISOString()
+          };
+
+          // Link to companies if not already linked
+          if (!existing.acquirer_id && acquirerId) {
+            updateData.acquirer_id = acquirerId;
+          }
+          if (!existing.target_id && targetId) {
+            updateData.target_id = targetId;
+          }
+
+          // Only update payment structure and breakup fee if not already fetched
+          if (!existing.deal_terms_fetched && (deal.payment_structure || deal.breakup_fee)) {
+            updateData.payment_structure = deal.payment_structure;
+            updateData.breakup_fee = deal.breakup_fee;
+            updateData.deal_terms_fetched = true;
+          }
+
           const { error: updateError } = await supabaseAdmin
             .from('deals')
-            .update({
-              status: deal.status,
-              value_usd: deal.value_usd,
-              synopsis: deal.synopsis,
-              confidence_score: deal.confidenceScore,
-              verification_status: deal.verificationStatus,
-              updated_at: new Date().toISOString()
-            })
+            .update(updateData)
             .eq('id', existing.id);
 
           if (updateError) {
@@ -180,8 +301,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               synopsis: deal.synopsis,
               sector: deal.sector,
               geography: deal.geography,
+              payment_structure: deal.payment_structure,
+              breakup_fee: deal.breakup_fee,
+              acquirer_id: acquirerId,
+              target_id: targetId,
               confidence_score: deal.confidenceScore,
               verification_status: deal.verificationStatus,
+              deal_terms_fetched: true,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })

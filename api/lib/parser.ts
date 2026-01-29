@@ -14,6 +14,10 @@ export interface ParsedDeal {
   geography?: string;
   synopsis?: string;
   rationale?: string;
+  payment_structure?: string;
+  breakup_fee?: string;
+  acquirer_domain?: string;
+  target_domain?: string;
   sources: Array<{ url: string; publication: string; type: string }>;
 }
 
