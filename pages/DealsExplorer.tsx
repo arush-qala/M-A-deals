@@ -1,14 +1,15 @@
 
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Search, 
-  Filter, 
-  LayoutGrid, 
-  List, 
-  ChevronRight, 
-  Globe, 
-  Tag, 
+import { useQuery } from '@tanstack/react-query';
+import {
+  Search,
+  Filter,
+  LayoutGrid,
+  List,
+  ChevronRight,
+  Globe,
+  Tag,
   Database,
   Zap,
   X,
@@ -16,10 +17,14 @@ import {
   DollarSign,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 import { SEED_DEALS, SEED_COMPANIES } from '../constants.tsx';
-import { DealStatus, Deal } from '../types.ts';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { DealStatus, Deal, VerificationStatus } from '../types.ts';
 import CompanyLogo from '../components/CompanyLogo.tsx';
 
 // Helper to safely access nested properties for sorting
@@ -46,7 +51,7 @@ const formatCurrency = (value: number | undefined) => {
 const DealsExplorer: React.FC = () => {
   const [view, setView] = useState<'grid' | 'list'>('list');
   const [showAdvanced, setShowAdvanced] = useState(false);
-  
+
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -58,6 +63,27 @@ const DealsExplorer: React.FC = () => {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
     key: 'announced_date',
     direction: 'desc',
+  });
+
+  // Fetch deals from Supabase or fallback to seed data
+  const { data: allDeals = SEED_DEALS, isLoading, isError } = useQuery({
+    queryKey: ['deals'],
+    queryFn: async () => {
+      if (isSupabaseConfigured) {
+        const { data, error } = await supabase
+          .from('deals')
+          .select('*')
+          .eq('visibility', 'public')
+          .order('announced_date', { ascending: false });
+
+        if (!error && data && data.length > 0) {
+          return data as Deal[];
+        }
+      }
+      // Fallback to seed data
+      return SEED_DEALS;
+    },
+    staleTime: 1000 * 60 * 5 // 5 minutes
   });
 
   const handleSort = (key: string) => {
@@ -77,11 +103,23 @@ const DealsExplorer: React.FC = () => {
     setSortConfig({ key: 'announced_date', direction: 'desc' });
   };
 
-  const sectors = useMemo(() => ['All', ...new Set(SEED_DEALS.map(d => d.sector.split(' / ')[0]))], []);
-  const geographies = useMemo(() => ['All', ...new Set(SEED_DEALS.map(d => d.geography))], []);
+  const sectors = useMemo(() => ['All', ...new Set(allDeals.map(d => d.sector.split(' / ')[0]))], [allDeals]);
+  const geographies = useMemo(() => ['All', ...new Set(allDeals.map(d => d.geography))], [allDeals]);
+
+  // Get verification badge
+  const getVerificationIcon = (status?: VerificationStatus) => {
+    if (!status) return null;
+    if (status === 'verified') {
+      return <CheckCircle2 className="h-3 w-3 text-emerald-500" title="Verified" />;
+    }
+    if (status === 'pending') {
+      return <AlertTriangle className="h-3 w-3 text-amber-500" title="Pending verification" />;
+    }
+    return null;
+  };
 
   const filteredDeals = useMemo(() => {
-    let results = SEED_DEALS.filter(deal => {
+    let results = allDeals.filter(deal => {
       const matchesSearch = deal.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            deal.sector.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'All' || deal.status === statusFilter;
@@ -124,7 +162,7 @@ const DealsExplorer: React.FC = () => {
     });
 
     return results;
-  }, [searchQuery, statusFilter, sectorFilter, geoFilter, valueTier, sortConfig]);
+  }, [allDeals, searchQuery, statusFilter, sectorFilter, geoFilter, valueTier, sortConfig]);
 
   const getStatusColor = (status: DealStatus) => {
     switch (status) {
@@ -150,13 +188,30 @@ const DealsExplorer: React.FC = () => {
       : <ArrowDown className="h-3 w-3 text-indigo-600 ml-1" />;
   };
 
+  // Check if using live data or seed data
+  const isUsingLiveData = isSupabaseConfigured && allDeals !== SEED_DEALS;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
-          <div className="inline-flex items-center space-x-2 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold uppercase tracking-wider mb-2 border border-indigo-100">
-            <Zap className="h-3 w-3" />
-            <span>24/7 Market Ingestion Active</span>
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="inline-flex items-center space-x-2 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold uppercase tracking-wider border border-indigo-100">
+              <Zap className="h-3 w-3" />
+              <span>24/7 Market Ingestion Active</span>
+            </div>
+            {isUsingLiveData && (
+              <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider border border-emerald-100">
+                <Database className="h-3 w-3" />
+                <span>Live Data</span>
+              </div>
+            )}
+            {isLoading && (
+              <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider border border-slate-200">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Loading</span>
+              </div>
+            )}
           </div>
           <h1 className="text-4xl font-serif font-bold text-slate-900 mb-2">Deals Explorer</h1>
           <p className="text-slate-500">Search and analyze global transaction flow with verified data.</p>
@@ -371,9 +426,12 @@ const DealsExplorer: React.FC = () => {
                         {formatCurrency(deal.value_usd)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
-                          {deal.status}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
+                            {deal.status}
+                          </span>
+                          {getVerificationIcon(deal.verification_status)}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-indigo-400 inline-block" />
@@ -400,15 +458,18 @@ const DealsExplorer: React.FC = () => {
               <Link key={deal.id} to={`/deals/${deal.slug}`} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md hover:border-indigo-200 transition group flex flex-col h-full">
                 <div className="flex justify-between items-start mb-4">
                   <div className="h-10 w-10 bg-white border border-slate-100 rounded-lg p-2 shadow-sm">
-                    <CompanyLogo 
-                      logoUrl={target?.logo_url} 
-                      name={target?.name || 'Target'} 
-                      className="h-full w-full" 
+                    <CompanyLogo
+                      logoUrl={target?.logo_url}
+                      name={target?.name || 'Target'}
+                      className="h-full w-full"
                     />
                   </div>
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
-                    {deal.status}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
+                      {deal.status}
+                    </span>
+                    {getVerificationIcon(deal.verification_status)}
+                  </div>
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition mb-3 line-clamp-2">
                   {deal.title}

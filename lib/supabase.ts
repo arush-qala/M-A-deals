@@ -1,13 +1,23 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Note: These would usually be environment variables.
-// For the sake of this demo, we'll provide placeholders or logic to handle missing vars.
-const supabaseUrl = 'https://your-project-url.supabase.co';
-const supabaseKey = 'your-anon-key';
+// Environment variables - set these in Vercel dashboard or .env.local
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Fallback to a mock-like behavior if credentials are missing
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Check if credentials are configured
+const isConfigured = supabaseUrl && supabaseKey &&
+  !supabaseUrl.includes('your-project') &&
+  !supabaseKey.includes('your-anon');
+
+// Create client (will work in mock mode if not configured)
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseKey || 'placeholder-key'
+);
+
+// Export config status for UI feedback
+export const isSupabaseConfigured = isConfigured;
 
 /**
  * SQL Schema Reference (Run this in your Supabase SQL Editor):

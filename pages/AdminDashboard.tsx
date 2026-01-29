@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
-import { 
-  Database, 
-  Settings, 
-  RefreshCcw, 
-  AlertCircle, 
-  Plus, 
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Database,
+  Settings,
+  RefreshCcw,
+  AlertCircle,
+  Plus,
   Trash2,
   Edit3,
   Clock,
@@ -13,34 +14,146 @@ import {
   ShieldCheck,
   Github,
   Key,
-  Network
+  Network,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
-import { SEED_DEALS } from '../constants.tsx';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import type { SyncLog, Deal } from '../types';
+
+interface SyncResult {
+  success: boolean;
+  syncType: string;
+  duration: string;
+  summary: {
+    sourcesChecked: { sec_edgar: number; perplexity: number };
+    totalFound: number;
+    afterDedup: number;
+    afterFilter: number;
+    verification: { verified: number; pending: number; unverified: number; avgScore: number };
+    dealsAdded: number;
+    dealsUpdated: number;
+    errors: number;
+  };
+}
 
 const AdminDashboard: React.FC = () => {
-  const [githubStatus, setGithubStatus] = useState<'connected' | 'error' | 'syncing'>('error');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
   const [logs, setLogs] = useState<string[]>([]);
-  const lastUpdate = new Date().toLocaleTimeString();
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
 
-  const handleReconnectGithub = () => {
-    setGithubStatus('syncing');
-    setLogs(prev => ["Attempting GitHub OAuth Handshake...", ...prev]);
-    
-    setTimeout(() => {
-      setGithubStatus('connected');
-      setLogs(prev => ["SUCCESS: GitHub repository connection re-established.", ...prev]);
-    }, 2000);
-  };
+  // Fetch deals from Supabase
+  const { data: deals = [], isLoading: dealsLoading } = useQuery({
+    queryKey: ['admin-deals'],
+    queryFn: async () => {
+      if (!isSupabaseConfigured) {
+        // Fallback to API if Supabase not configured client-side
+        const response = await fetch('/api/deals?limit=100');
+        if (!response.ok) throw new Error('Failed to fetch deals');
+        const data = await response.json();
+        return data.deals as Deal[];
+      }
+      const { data, error } = await supabase
+        .from('deals')
+        .select('*')
+        .order('announced_date', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data as Deal[];
+    },
+    staleTime: 1000 * 60 * 2 // 2 minutes
+  });
+
+  // Fetch sync logs
+  const { data: syncLogs = [] } = useQuery({
+    queryKey: ['sync-logs'],
+    queryFn: async () => {
+      if (!isSupabaseConfigured) return [];
+      const { data, error } = await supabase
+        .from('sync_logs')
+        .select('*')
+        .order('started_at', { ascending: false })
+        .limit(10);
+      if (error) return [];
+      return data as SyncLog[];
+    },
+    staleTime: 1000 * 30 // 30 seconds
+  });
+
+  // Update last sync time from logs
+  useEffect(() => {
+    if (syncLogs.length > 0) {
+      const lastSync = syncLogs[0];
+      setLastSyncTime(new Date(lastSync.started_at).toLocaleTimeString());
+    }
+  }, [syncLogs]);
+
+  // Sync mutation
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      setLogs(prev => ["MANUAL TRIGGER: Starting sync pipeline...", ...prev]);
+
+      const response = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Sync failed');
+      }
+
+      return response.json() as Promise<SyncResult>;
+    },
+    onSuccess: (result) => {
+      const { summary } = result;
+      setLogs(prev => [
+        `SUCCESS: Sync completed in ${result.duration}`,
+        `  - Sources checked: SEC (${summary.sourcesChecked.sec_edgar}), Perplexity (${summary.sourcesChecked.perplexity})`,
+        `  - Deals found: ${summary.totalFound}, after dedup: ${summary.afterDedup}`,
+        `  - Added: ${summary.dealsAdded}, Updated: ${summary.dealsUpdated}`,
+        `  - Verification: ${summary.verification.verified} verified, ${summary.verification.pending} pending`,
+        ...prev
+      ]);
+      setLastSyncTime(new Date().toLocaleTimeString());
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['admin-deals'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      queryClient.invalidateQueries({ queryKey: ['sync-logs'] });
+    },
+    onError: (error) => {
+      setLogs(prev => [
+        `ERROR: Sync failed - ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ...prev
+      ]);
+    }
+  });
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    setLogs(prev => ["MANUAL TRIGGER: Polling external data sources...", ...prev]);
-    setTimeout(() => {
-      setIsRefreshing(false);
-      setLogs(prev => ["SUCCESS: 0 new records found. Database up to date.", ...prev]);
-    }, 1500);
+    syncMutation.mutate();
   };
+
+  // Source health status
+  const sourceHealth = [
+    {
+      name: 'SEC EDGAR',
+      status: 'Online',
+      delay: '~5s',
+      configured: true
+    },
+    {
+      name: 'Perplexity API',
+      status: process.env.PERPLEXITY_API_KEY ? 'Online' : 'Not Configured',
+      delay: '~3s',
+      configured: Boolean(process.env.PERPLEXITY_API_KEY)
+    },
+    {
+      name: 'Supabase',
+      status: isSupabaseConfigured ? 'Online' : 'Not Configured',
+      delay: '~1s',
+      configured: isSupabaseConfigured
+    }
+  ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -48,27 +161,29 @@ const AdminDashboard: React.FC = () => {
         <div>
           <h1 className="text-3xl font-serif font-bold text-slate-900">Admin Intelligence Console</h1>
           <div className="flex items-center space-x-4 mt-2">
-            <div className="flex items-center text-xs font-bold text-emerald-600 uppercase tracking-widest">
+            <div className={`flex items-center text-xs font-bold uppercase tracking-widest ${
+              isSupabaseConfigured ? 'text-emerald-600' : 'text-amber-600'
+            }`}>
               <ShieldCheck className="h-3.5 w-3.5 mr-1" />
-              Pipeline: Operational
+              Pipeline: {isSupabaseConfigured ? 'Operational' : 'Setup Required'}
             </div>
             <div className="text-slate-400 text-xs font-medium">
-              Last Sync: {lastUpdate}
+              Last Sync: {lastSyncTime || 'Never'}
             </div>
           </div>
         </div>
         <div className="mt-4 md:mt-0 flex items-center space-x-3">
-          <button 
+          <button
             onClick={handleRefresh}
-            disabled={isRefreshing}
+            disabled={syncMutation.isPending}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg border text-sm font-bold transition ${
-              isRefreshing 
-              ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' 
+              syncMutation.isPending
+              ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed'
               : 'bg-white text-indigo-600 border-indigo-100 hover:bg-indigo-50 shadow-sm'
             }`}
           >
-            <RefreshCcw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>{isRefreshing ? 'Syncing...' : 'Sync Latest Signal'}</span>
+            <RefreshCcw className={`h-4 w-4 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
+            <span>{syncMutation.isPending ? 'Syncing...' : 'Sync Latest Signal'}</span>
           </button>
           
           <button className="flex items-center space-x-2 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-50 transition">
@@ -83,56 +198,63 @@ const AdminDashboard: React.FC = () => {
           
           {/* External Services Grid */}
           <div className="grid md:grid-cols-3 gap-4">
-            <div className={`p-5 rounded-2xl border transition ${githubStatus === 'error' ? 'bg-red-50 border-red-100' : 'bg-white border-slate-200 shadow-sm'}`}>
-              <div className="flex justify-between items-start mb-4">
-                <div className={`p-2 rounded-lg ${githubStatus === 'error' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-900'}`}>
-                  <Github className="h-5 w-5" />
-                </div>
-                {githubStatus === 'error' && (
-                  <span className="flex items-center text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full uppercase">Auth Error</span>
-                )}
-                {githubStatus === 'connected' && (
-                  <span className="flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full uppercase">Live</span>
-                )}
-              </div>
-              <h4 className="text-sm font-bold text-slate-900 mb-1">GitHub Integration</h4>
-              <p className="text-xs text-slate-500 mb-4">Repository connection for source tracking.</p>
-              <button 
-                onClick={handleReconnectGithub}
-                className={`w-full py-2 rounded-lg text-xs font-bold transition ${githubStatus === 'error' ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-              >
-                {githubStatus === 'error' ? 'Fix Authentication' : 'Refresh Connection'}
-              </button>
-            </div>
-
             <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
               <div className="flex justify-between items-start mb-4">
                 <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
                   <Key className="h-5 w-5" />
                 </div>
-                <span className="flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full uppercase">Secure</span>
+                <span className="flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full uppercase">Free</span>
               </div>
               <h4 className="text-sm font-bold text-slate-900 mb-1">SEC EDGAR API</h4>
-              <p className="text-xs text-slate-500 mb-4">Official regulatory filing ingestion.</p>
+              <p className="text-xs text-slate-500 mb-4">Official US regulatory filings (8-K, S-4).</p>
               <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
                 <div className="h-full bg-indigo-500 w-full"></div>
               </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <div className={`p-5 rounded-2xl border transition ${!isSupabaseConfigured ? 'bg-amber-50 border-amber-100' : 'bg-white border-slate-200 shadow-sm'}`}>
               <div className="flex justify-between items-start mb-4">
-                <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
+                <div className={`p-2 rounded-lg ${!isSupabaseConfigured ? 'bg-amber-100 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
                   <Network className="h-5 w-5" />
                 </div>
-                <span className="flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full uppercase">Live</span>
+                <span className={`flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                  isSupabaseConfigured ? 'text-emerald-600 bg-emerald-100' : 'text-amber-600 bg-amber-100'
+                }`}>
+                  {isSupabaseConfigured ? 'Connected' : 'Setup Required'}
+                </span>
               </div>
-              <h4 className="text-sm font-bold text-slate-900 mb-1">Reuters Feed</h4>
-              <p className="text-xs text-slate-500 mb-4">Real-time market news wire stream.</p>
+              <h4 className="text-sm font-bold text-slate-900 mb-1">Perplexity AI</h4>
+              <p className="text-xs text-slate-500 mb-4">Global deal discovery & verification.</p>
               <div className="flex items-center space-x-1 mt-4">
-                <div className="h-1 w-3 bg-emerald-500 rounded-full animate-pulse"></div>
-                <div className="h-1 w-3 bg-emerald-500 rounded-full animate-pulse delay-75"></div>
-                <div className="h-1 w-3 bg-emerald-500 rounded-full animate-pulse delay-150"></div>
+                <div className={`h-1 w-3 rounded-full ${isSupabaseConfigured ? 'bg-emerald-500 animate-pulse' : 'bg-amber-300'}`}></div>
+                <div className={`h-1 w-3 rounded-full ${isSupabaseConfigured ? 'bg-emerald-500 animate-pulse delay-75' : 'bg-amber-300'}`}></div>
+                <div className={`h-1 w-3 rounded-full ${isSupabaseConfigured ? 'bg-emerald-500 animate-pulse delay-150' : 'bg-amber-300'}`}></div>
               </div>
+            </div>
+
+            <div className={`p-5 rounded-2xl border transition ${!isSupabaseConfigured ? 'bg-amber-50 border-amber-100' : 'bg-white border-slate-200 shadow-sm'}`}>
+              <div className="flex justify-between items-start mb-4">
+                <div className={`p-2 rounded-lg ${!isSupabaseConfigured ? 'bg-amber-100 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                  <Database className="h-5 w-5" />
+                </div>
+                <span className={`flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                  isSupabaseConfigured ? 'text-emerald-600 bg-emerald-100' : 'text-amber-600 bg-amber-100'
+                }`}>
+                  {isSupabaseConfigured ? 'Connected' : 'Setup Required'}
+                </span>
+              </div>
+              <h4 className="text-sm font-bold text-slate-900 mb-1">Supabase Database</h4>
+              <p className="text-xs text-slate-500 mb-4">PostgreSQL for deal storage.</p>
+              {!isSupabaseConfigured && (
+                <p className="text-[10px] text-amber-600 font-medium">
+                  Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel
+                </p>
+              )}
+              {isSupabaseConfigured && (
+                <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 w-full"></div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -165,7 +287,7 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <h2 className="font-bold text-slate-900">Verified Deal Database</h2>
                 <span className="bg-indigo-100 text-indigo-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                  {SEED_DEALS.length} Records
+                  {dealsLoading ? '...' : `${deals.length} Records`}
                 </span>
               </div>
               <button className="bg-white text-slate-900 border border-slate-200 px-4 py-2 rounded-lg text-sm font-bold flex items-center space-x-2 hover:bg-slate-50 transition">
@@ -173,34 +295,73 @@ const AdminDashboard: React.FC = () => {
                 <span>Add Record</span>
               </button>
             </div>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-200">
                     <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Transaction</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Edit</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {SEED_DEALS.map((deal, i) => (
-                    <tr key={i} className="hover:bg-slate-50 transition">
-                      <td className="px-6 py-4 text-xs font-mono text-slate-500">
-                        {deal.announced_date}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-bold text-slate-900 truncate max-w-sm">{deal.title}</div>
-                        <div className="text-[10px] text-slate-400 font-bold uppercase">{deal.sector}</div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"><Edit3 className="h-4 w-4" /></button>
-                          <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"><Trash2 className="h-4 w-4" /></button>
-                        </div>
+                  {dealsLoading ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-slate-400">
+                        Loading deals...
                       </td>
                     </tr>
-                  ))}
+                  ) : deals.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-slate-400">
+                        No deals in database. Click "Sync Latest Signal" to fetch deals.
+                      </td>
+                    </tr>
+                  ) : (
+                    deals.map((deal, i) => (
+                      <tr key={deal.id || i} className="hover:bg-slate-50 transition">
+                        <td className="px-6 py-4 text-xs font-mono text-slate-500">
+                          {deal.announced_date}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-bold text-slate-900 truncate max-w-sm">{deal.title}</div>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase">{deal.sector}</span>
+                            {deal.verification_status && (
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                                deal.verification_status === 'verified'
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : deal.verification_status === 'pending'
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-slate-100 text-slate-500'
+                              }`}>
+                                {deal.verification_status}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`text-xs font-bold px-2 py-1 rounded ${
+                            deal.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
+                            deal.status === 'Pending' ? 'bg-blue-100 text-blue-700' :
+                            deal.status === 'Announced' ? 'bg-indigo-100 text-indigo-700' :
+                            deal.status === 'Withdrawn' ? 'bg-red-100 text-red-700' :
+                            'bg-amber-100 text-amber-700'
+                          }`}>
+                            {deal.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"><Edit3 className="h-4 w-4" /></button>
+                            <button className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"><Trash2 className="h-4 w-4" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -214,16 +375,21 @@ const AdminDashboard: React.FC = () => {
               Source Health
             </h3>
             <div className="space-y-4">
-              {[
-                { name: 'SEC EDGAR', status: 'Online', delay: '12s' },
-                { name: 'Reuters Wire', status: 'Online', delay: '4s' },
-                { name: 'Bloomberg', status: 'Online', delay: '8s' }
-              ].map((s, i) => (
+              {sourceHealth.map((s, i) => (
                 <div key={i} className="flex justify-between items-center text-xs">
                   <span className="text-indigo-200">{s.name}</span>
                   <div className="flex items-center space-x-2">
-                    <span className="text-white font-bold">{s.status}</span>
-                    <span className="text-[10px] text-indigo-300 font-mono">({s.delay})</span>
+                    {s.configured ? (
+                      <CheckCircle2 className="h-3 w-3 text-emerald-300" />
+                    ) : (
+                      <XCircle className="h-3 w-3 text-red-300" />
+                    )}
+                    <span className={`font-bold ${s.configured ? 'text-white' : 'text-red-200'}`}>
+                      {s.status}
+                    </span>
+                    {s.configured && (
+                      <span className="text-[10px] text-indigo-300 font-mono">({s.delay})</span>
+                    )}
                   </div>
                 </div>
               ))}

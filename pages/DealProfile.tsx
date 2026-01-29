@@ -1,13 +1,14 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Share2, 
-  Bookmark, 
-  Globe, 
-  Calendar, 
-  Building2, 
+import { useQuery } from '@tanstack/react-query';
+import {
+  ArrowLeft,
+  Share2,
+  Bookmark,
+  Globe,
+  Calendar,
+  Building2,
   TrendingUp,
   FileText,
   ExternalLink,
@@ -16,30 +17,84 @@ import {
   AlertCircle,
   Sparkles,
   TrendingDown,
-  Clock
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  HelpCircle,
+  Link as LinkIcon
 } from 'lucide-react';
 import { SEED_DEALS, SEED_COMPANIES } from '../constants.tsx';
-import { Deal, Company, DealStatus } from '../types.ts';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { Deal, Company, DealStatus, DealSource, VerificationStatus } from '../types.ts';
 import CompanyLogo from '../components/CompanyLogo.tsx';
 
 const DealProfile: React.FC = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const [deal, setDeal] = useState<Deal | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const foundDeal = SEED_DEALS.find(d => d.slug === slug);
-    if (foundDeal) {
-      setDeal(foundDeal);
-      document.title = `${foundDeal.title} — M&A Intelligence`;
-    }
-    setIsLoading(false);
-  }, [slug]);
+  // Fetch deal from Supabase or fallback to seed data
+  const { data: deal, isLoading } = useQuery({
+    queryKey: ['deal', slug],
+    queryFn: async () => {
+      if (isSupabaseConfigured) {
+        // Try fetching from Supabase first
+        const { data, error } = await supabase
+          .from('deals')
+          .select(`
+            *,
+            sources:deal_sources(*)
+          `)
+          .eq('slug', slug)
+          .single();
+
+        if (!error && data) {
+          document.title = `${data.title} — M&A Intelligence`;
+          return data as Deal & { sources?: DealSource[] };
+        }
+      }
+
+      // Fallback to seed data
+      const foundDeal = SEED_DEALS.find(d => d.slug === slug);
+      if (foundDeal) {
+        document.title = `${foundDeal.title} — M&A Intelligence`;
+        return foundDeal;
+      }
+      return null;
+    },
+    staleTime: 1000 * 60 * 5 // 5 minutes
+  });
 
   // Resolve companies
   const acquirer = useMemo(() => deal ? SEED_COMPANIES.find(c => c.id === deal.acquirer_id) : null, [deal]);
   const target = useMemo(() => deal ? SEED_COMPANIES.find(c => c.id === deal.target_id) : null, [deal]);
+
+  // Get verification badge component
+  const getVerificationBadge = (status?: VerificationStatus) => {
+    if (!status) return null;
+    switch (status) {
+      case 'verified':
+        return (
+          <span className="flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Verified
+          </span>
+        );
+      case 'pending':
+        return (
+          <span className="flex items-center text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            Pending Review
+          </span>
+        );
+      default:
+        return (
+          <span className="flex items-center text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-full border border-slate-200">
+            <HelpCircle className="h-3 w-3 mr-1" />
+            Unverified
+          </span>
+        );
+    }
+  };
 
   const handleSaveDeal = () => {
     alert("Deal saved to your watchlist!");
@@ -96,6 +151,7 @@ const DealProfile: React.FC = () => {
                 <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(deal.status)}`}>
                   {deal.status}
                 </span>
+                {deal.verification_status && getVerificationBadge(deal.verification_status)}
                 {deal.geography && (
                   <span className="flex items-center text-[10px] font-bold uppercase text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
                     <Globe className="h-3 w-3 mr-1.5" />
@@ -106,6 +162,12 @@ const DealProfile: React.FC = () => {
                   <TrendingUp className="h-3 w-3 mr-1.5" />
                   {deal.sector}
                 </span>
+                {deal.confidence_score !== undefined && (
+                  <span className="flex items-center text-[10px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                    <ShieldCheck className="h-3 w-3 mr-1.5" />
+                    {deal.confidence_score}% confidence
+                  </span>
+                )}
               </div>
               <h1 className="text-4xl sm:text-5xl font-serif font-bold text-slate-900 leading-tight mb-8">
                 {deal.title}
@@ -226,6 +288,61 @@ const DealProfile: React.FC = () => {
                     </div>
                   </div>
                 </div>
+              </section>
+            )}
+
+            {/* Sources & Citations Section */}
+            {deal.sources && deal.sources.length > 0 && (
+              <section className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
+                  <LinkIcon className="h-5 w-5 mr-3 text-indigo-600" />
+                  Sources & Citations
+                </h2>
+                <div className="space-y-3">
+                  {deal.sources.map((source, index) => (
+                    <a
+                      key={source.id || index}
+                      href={source.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100 hover:bg-indigo-50 hover:border-indigo-100 transition group"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className={`p-2 rounded-lg ${
+                          source.source_type === 'sec_edgar'
+                            ? 'bg-indigo-100 text-indigo-600'
+                            : source.source_type === 'perplexity'
+                            ? 'bg-purple-100 text-purple-600'
+                            : 'bg-slate-200 text-slate-600'
+                        }`}>
+                          {source.source_type === 'sec_edgar' ? (
+                            <FileText className="h-4 w-4" />
+                          ) : (
+                            <Globe className="h-4 w-4" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition">
+                            {source.publication_name || 'Unknown Source'}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {source.source_type === 'sec_edgar' ? 'SEC Filing' :
+                             source.source_type === 'perplexity' ? 'Perplexity AI' :
+                             source.source_type === 'rss' ? 'News Feed' : 'Manual Entry'}
+                            {source.published_at && ` • ${new Date(source.published_at).toLocaleDateString()}`}
+                          </div>
+                        </div>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-slate-400 group-hover:text-indigo-600 transition" />
+                    </a>
+                  ))}
+                </div>
+                {deal.sources.some(s => s.is_primary) && (
+                  <div className="mt-4 text-xs text-slate-500 flex items-center">
+                    <ShieldCheck className="h-3 w-3 mr-1 text-emerald-500" />
+                    Primary source verified via official filing
+                  </div>
+                )}
               </section>
             )}
           </div>

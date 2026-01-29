@@ -18,6 +18,8 @@ export interface MarketResponse {
   sentiment_summary: string;
 }
 
+export type VerificationStatus = 'unverified' | 'pending' | 'verified';
+
 export interface Deal {
   id: string;
   slug: string;
@@ -36,6 +38,11 @@ export interface Deal {
   acquirer_id: string; // ID of the acquiring company
   target_id: string;   // ID of the target company
   market_response?: MarketResponse; // Optional, only for public companies with verified data
+  // Sync & verification fields
+  confidence_score?: number; // 0-100 verification score
+  verification_status?: VerificationStatus;
+  external_id?: string; // Unique ID from source (e.g., SEC accession number)
+  sources?: DealSource[]; // Sources for this deal
   created_at: string;
   updated_at: string;
 }
@@ -63,11 +70,32 @@ export interface DealAdvisor {
   role: 'Legal' | 'Financial' | 'Accounting' | 'PR';
 }
 
+export type SourceType = 'sec_edgar' | 'perplexity' | 'rss' | 'manual';
+
 export interface DealSource {
   id: string;
   deal_id: string;
-  url: string;
+  source_type: SourceType;
+  source_url: string;
   publication_name: string;
+  published_at?: string;
+  fetched_at?: string;
+  is_primary?: boolean;
+  raw_content?: string; // Store original content for audit
+}
+
+export type SyncStatus = 'running' | 'completed' | 'failed';
+
+export interface SyncLog {
+  id: string;
+  sync_type: 'manual' | 'scheduled';
+  started_at: string;
+  completed_at?: string;
+  status: SyncStatus;
+  deals_added: number;
+  deals_updated: number;
+  errors: string[];
+  sources_checked?: Record<string, boolean>;
 }
 
 export interface UserProfile {
