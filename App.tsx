@@ -75,9 +75,9 @@ const App: React.FC = () => {
                 <Link to="/deals" className={`${location.pathname === '/deals' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-900'} px-1 pt-1 text-sm font-medium h-16 flex items-center`}>
                   Deals Explorer
                 </Link>
-                <Link to="/methodology" className={`${location.pathname === '/methodology' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-900'} px-1 pt-1 text-sm font-medium h-16 flex items-center`}>
+                {/* <Link to="/methodology" className={`${location.pathname === '/methodology' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-900'} px-1 pt-1 text-sm font-medium h-16 flex items-center`}>
                   Methodology
-                </Link>
+                </Link> */}
                 <Link to="/app/admin" className={`${location.pathname === '/app/admin' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-900'} px-1 pt-1 text-sm font-medium h-16 flex items-center`}>
                   Admin Panel
                 </Link>
@@ -125,7 +125,7 @@ const App: React.FC = () => {
           <div className="md:hidden bg-white border-b border-slate-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
               <Link to="/deals" className="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-md">Deals Explorer</Link>
-              <Link to="/methodology" className="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-md">Methodology</Link>
+              {/* <Link to="/methodology" className="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-md">Methodology</Link> */}
               <Link to="/app" className="block px-3 py-2 text-base font-medium text-indigo-600 hover:bg-indigo-50 rounded-md">Dashboard</Link>
               <Link to="/app/admin" className="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-md">Admin</Link>
             </div>
@@ -166,7 +166,7 @@ const App: React.FC = () => {
               <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Platform</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link to="/deals" className="hover:text-white transition">Deals Explorer</Link></li>
-                <li><Link to="/methodology" className="hover:text-white transition">Methodology</Link></li>
+                {/* <li><Link to="/methodology" className="hover:text-white transition">Methodology</Link></li> */}
                 <li><Link to="/app/watchlists" className="hover:text-white transition">Watchlists</Link></li>
               </ul>
             </div>

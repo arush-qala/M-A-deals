@@ -29,7 +29,7 @@ const LandingPage: React.FC = () => {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
                 </span>
-                <span>Live Deal Flow Updated Every 15 Minutes</span>
+                <span>Live Deal Flow Updated Twice Daily (8AM & 6PM UTC)</span>
               </div>
               <h1 className="text-4xl tracking-tight font-serif font-bold text-slate-900 sm:text-6xl md:text-7xl">
                 The Signal in the <br />
