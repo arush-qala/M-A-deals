@@ -49,12 +49,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Step 1: Fetch from SEC EDGAR
     console.log('Fetching SEC EDGAR filings...');
-    const secDeals = await fetchSECDeals(30);
+    const secDeals = await fetchSECDeals(90); // Last 90 days
     console.log(`Found ${secDeals.length} potential deals from SEC`);
 
     // Step 2: Fetch from Perplexity (global deals)
     console.log('Fetching global deals from Perplexity...');
-    const perplexityDeals = await fetchGlobalDeals(30);
+    const perplexityDeals = await fetchGlobalDeals(90); // Last 90 days
     console.log(`Found ${perplexityDeals.length} deals from Perplexity`);
 
     // Step 3: Convert to common format
